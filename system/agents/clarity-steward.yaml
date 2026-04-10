@@ -1,0 +1,49 @@
+# clarity-steward.yaml -- Agent that maintains expertise.yaml health
+#
+# This agent runs as a Paperclip-managed Claude Code child process.
+# It receives PAPERCLIP_AGENT_ID, PAPERCLIP_ISSUE_ID, etc. as env vars.
+
+name: Clarity Steward
+role: maintenance
+
+# What this agent does on each heartbeat
+heartbeat_routine: |
+  1. List all clients/ and apps/ directories that have expertise.yaml
+  2. For each, check:
+     a. YAML validity: python3 -c "import yaml; yaml.safe_load(open(path))"
+     b. Line count -- flag if over 900 lines (cap is 1000)
+     c. Unvalidated observations count -- flag if over 20 pending
+  3. Run /se:self-improve on any target with >10 unvalidated observations
+  4. Report results back via issue comment
+
+# Skills this agent needs injected by Paperclip
+skills:
+  - se:self-improve
+  - se:brief
+
+# Files this agent reads (knowledge base)
+reads:
+  - clients/*/expertise.yaml
+  - apps/*/expertise.yaml
+  - clients/*/notes.md
+  - apps/*/notes.md
+
+# Files this agent writes
+writes:
+  - clients/*/expertise.yaml
+  - apps/*/expertise.yaml
+
+# Working directory (relative to clarity-framework root)
+cwd: /home/spotcircuit/clarity-framework
+
+# Environment variables to set (beyond Paperclip's injected ones)
+env:
+  CLARITY_ROOT: /home/spotcircuit/clarity-framework
+
+# Guardrails
+rules:
+  - Never delete observations -- only promote or mark stale
+  - Never edit client.yaml or app.yaml (secrets)
+  - Always validate YAML after writing
+  - Keep expertise.yaml under 1000 lines
+  - Log all changes to the issue for audit trail

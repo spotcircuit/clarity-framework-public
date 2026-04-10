@@ -1,0 +1,55 @@
+# social-media-agent.yaml — Daily social media pipeline
+#
+# Posts to LinkedIn + Facebook with humanized content and images.
+# Runs via: bash scripts/social-daily.sh
+
+name: Social Media Agent
+role: cmo
+
+heartbeat_routine: |
+  Run the daily social media pipeline:
+    bash scripts/social-daily.sh
+
+  The script handles:
+  1. Topic rotation (services → clarity → casestudy → repeat)
+  2. Draft generation from templates
+  3. Humanization via Claude CLI
+  4. Image card generation (HTML → PNG)
+  5. Post to LinkedIn (Playwright + cookies)
+  6. Post to Facebook (Chrome CDP + URL preview trick for images)
+  7. Save drafts + file to wiki
+
+content_rules:
+  tone_linkedin: professional, technical, first-person
+  tone_facebook: same content, hashtags with Escape trick, URL preview for images
+  length: 800-2000 chars
+  hashtags: 3-5 per post, always include AgenticAI
+  cta: link to spotcircuit.com
+  frequency: daily (weekdays)
+  avoid:
+    - generic AI hype
+    - sales-y language
+    - "I'm excited to announce"
+    - em dashes
+
+skills:
+  - se:brief
+
+reads:
+  - clients/spotcircuit/expertise.yaml
+  - apps/*/expertise.yaml
+  - wiki/index.md
+  - system/drafts/*.md
+
+writes:
+  - system/drafts/*.md
+
+cwd: /home/spotcircuit/clarity-framework
+
+rules:
+  - Always humanize before posting
+  - Save every draft to system/drafts/
+  - Don't post the same topic twice in a row
+  - LinkedIn: use Playwright with li_at cookie
+  - Facebook: use Chrome CDP (port 9222), image via URL preview trick
+  - If post fails, save draft and report — don't retry

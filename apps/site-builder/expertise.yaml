@@ -1,0 +1,46 @@
+app: site-builder
+last_updated: 2026-04-08
+
+architecture:
+  frontend: Vue 3 + TypeScript + Pinia + Tailwind CSS
+  backend: FastAPI + Python 3.13 + asyncio
+  generated_sites: React 18 + Tailwind CSS (Vite build)
+  ai_content: Claude Sonnet (claude-sonnet-4-20250514)
+  ai_images: Gemini 2.5 Flash Image
+  deploy_primary: Cloudflare Pages (wrangler CLI)
+  deploy_fallback: Vercel REST API
+  realtime: WebSocket (/ws)
+
+pipeline:
+  steps:
+    - parsing_url: maps_url_parser.py
+    - scraping_profile: maps_scraper.py (Playwright)
+    - scraping_website: website_scraper.py (optional)
+    - generating_content: site_generator.py (Claude)
+    - generating_images: image_generator.py (Gemini)
+    - building_site: react_builder.py (npm build)
+    - deploying: cloudflare_deployer.py / vercel_deployer.py
+
+testing:
+  backend_unit: 33 tests (pytest + httpx)
+  frontend_store: 33 tests (vitest)
+  e2e_smoke: 21 tests (Playwright)
+  e2e_full_gen: 11 tests (Playwright, ~5 min)
+  pattern: ACT-LEARN-REUSE (self-improving)
+
+editor:
+  sections: 13 (Hero, About, Services, Gallery, CTA, FAQ, Testimonials, Why Choose Us, How It Works, Contact, Design, SEO, Visibility)
+  features:
+    - live iframe preview with device switching
+    - AI section regeneration via Claude
+    - theme presets (Modern, Classic, Bold, Minimal, Elegant)
+    - dirty detection via JSON comparison
+    - quick preview vs full rebuild vs redeploy
+
+deployment:
+  backend: Railway (auto-deploy from standalone repo)
+  frontend: Vercel (auto-deploy from standalone repo)
+  sync: GitHub Action syncs monorepo -> standalone repo on push to main
+  cloudflare_limit: auto-deletes oldest project when limit hit
+
+unvalidated_observations: []

@@ -1,0 +1,50 @@
+# site-builder-agent.yaml -- Agent that manages the site-builder app
+#
+# Monitors build pipeline, updates expertise.yaml with deploy results.
+
+name: Site Builder Agent
+role: builder
+
+# Heartbeat routine
+heartbeat_routine: |
+  1. Read apps/site-builder/expertise.yaml for current state
+  2. Check for pending build requests (issues assigned to this agent)
+  3. For each pending build:
+     a. Read the issue description for parameters
+     b. Execute the build pipeline
+     c. Update issue status as work progresses
+     d. Record results in apps/site-builder/expertise.yaml
+  4. If no pending builds:
+     a. Run /se:brief site-builder to check health
+     b. Report any anomalies
+
+# Skills
+skills:
+  - se:brief
+  - se:check
+  - se:self-improve
+
+# Files this agent reads
+reads:
+  - apps/site-builder/expertise.yaml
+  - apps/site-builder/notes.md
+  - apps/site-builder/specs/*
+  - wiki/platform/site-builder-overview.md
+
+# Files this agent writes
+writes:
+  - apps/site-builder/expertise.yaml
+  - apps/site-builder/notes.md
+
+cwd: /home/spotcircuit/clarity-framework
+
+env:
+  CLARITY_ROOT: /home/spotcircuit/clarity-framework
+
+# Guardrails
+rules:
+  - Never deploy without a successful build
+  - Always update expertise.yaml with build results
+  - Record deploy URLs and timestamps
+  - Never modify app.yaml (secrets)
+  - Escalate failures to triage-agent via issue creation

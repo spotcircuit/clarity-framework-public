@@ -1,0 +1,25 @@
+# apps/{app-name}/app.yaml
+# Config for internal tools and products
+
+app:
+  name: {app-name}
+  display_name: {App Display Name}
+  type: tool  # tool | product | prototype
+
+codebase:
+  path: ~          # absolute path to source code
+  framework: ~     # e.g. "FastAPI + Vue 3", "Next.js 15"
+  repo: ~          # e.g. github.com/spotcircuit/site-builder
+
+environment:
+  dev:
+    url: ~
+    port: ~
+  prod:
+    url: ~
+
+goal: >
+  {One paragraph description of what this app does}
+
+dependencies:
+  - "{External services, APIs, credentials needed}"

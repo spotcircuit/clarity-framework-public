@@ -1,0 +1,29 @@
+# clients/{client-name}/expertise.yaml
+# Created: {date}
+# Purpose: Persistent knowledge base for this engagement
+
+meta:
+  client: {client-name}
+  display_name: {Client Display Name}
+  phase: 0
+  last_updated: {date}
+  lead: {your-name}
+
+solution:
+  description: >
+    {What this solution does -- one paragraph}
+  architecture: >
+    {How the components connect}
+
+project_state:
+  last_scan: {date}
+
+implementation_patterns:
+  # Patterns discovered during the engagement
+  # Format: pattern_name: > description
+
+known_issues:
+  # Known bugs, gotchas, workarounds
+
+unvalidated_observations:
+  # Raw observations from sessions -- validated by /se:self-improve

@@ -1,0 +1,51 @@
+# wiki-curator.yaml -- Agent that maintains the knowledge wiki
+#
+# Checks raw/ for new files and processes them. Runs lint periodically.
+
+name: Wiki Curator
+role: maintenance
+
+# Heartbeat routine
+heartbeat_routine: |
+  1. Check raw/ for unprocessed files (anything not in raw/processed/)
+  2. If files found:
+     a. Create a Paperclip issue: "Ingest: {count} new files"
+     b. Run /se:wiki-ingest to process them
+     c. Update the issue with results (pages created/updated)
+  3. If no files, run /se:wiki-lint with quick mode
+     a. Report any broken links or orphaned pages
+     b. If issues found and fewer than 5, auto-fix them
+  4. Verify wiki/index.md is current
+
+# Skills
+skills:
+  - se:wiki-ingest
+  - se:wiki-lint
+  - se:wiki-file
+
+# Files this agent reads
+reads:
+  - raw/*
+  - wiki/**/*.md
+  - wiki/index.md
+  - wiki/log.md
+
+# Files this agent writes
+writes:
+  - wiki/**/*.md
+  - wiki/index.md
+  - wiki/log.md
+
+cwd: /home/spotcircuit/clarity-framework
+
+env:
+  CLARITY_ROOT: /home/spotcircuit/clarity-framework
+
+# Guardrails
+rules:
+  - Always move processed files to raw/processed/
+  - Always update wiki/index.md after creating pages
+  - Always append to wiki/log.md
+  - One concept per wiki page
+  - Include source attribution on every page
+  - Never delete wiki pages -- mark stale instead

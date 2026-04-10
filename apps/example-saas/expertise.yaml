@@ -1,0 +1,11 @@
+# Example expertise.yaml for a SaaS app
+app_name: Example SaaS
+description: Placeholder showing the structure. Replace with your app details.
+stack:
+  backend: ""
+  frontend: ""
+  database: ""
+
+key_decisions: []
+api_gotchas: []
+unvalidated_observations: []

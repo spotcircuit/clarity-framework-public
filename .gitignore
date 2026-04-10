@@ -1,0 +1,34 @@
+# Credentials -- never commit
+clients/*/client.yaml
+!clients/_templates/client.yaml
+clients/*/.env
+apps/*/app.yaml
+!apps/_templates/app.yaml
+system/.env
+system/.paperclip-ids.json
+system/.venv/
+
+# Per-client/app working docs
+clients/*/comments.md
+clients/*/research/
+apps/*/research/
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Apps -- same pattern as clients
+apps/*/app.yaml
+!apps/_templates/app.yaml
+
+# Paperclip runtime state
+system/.paperclip-ids.json

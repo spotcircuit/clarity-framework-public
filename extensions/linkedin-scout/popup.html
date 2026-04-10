@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 450px; max-height: 600px; background: #0f172a; color: #e2e8f0; font-family: -apple-system, sans-serif; overflow-y: auto; }
+
+    .header { padding: 12px 16px; background: linear-gradient(135deg, #1e3a5f, #2d1b4e); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+    .header h1 { font-size: 15px; background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header .stats { font-size: 11px; color: #94a3b8; }
+
+    .tabs { display: flex; border-bottom: 1px solid #1e293b; background: #0f172a; position: sticky; top: 44px; z-index: 10; }
+    .tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; }
+    .tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+    .tab:hover { color: #94a3b8; }
+    .tab .badge { background: #3b82f6; color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; margin-left: 4px; }
+
+    .queue-item { padding: 12px 16px; border-bottom: 1px solid #1e293b; }
+    .queue-item:hover { background: #1e293b; }
+    .queue-author { font-size: 12px; color: #60a5fa; font-weight: 600; margin-bottom: 4px; }
+    .queue-post { font-size: 11px; color: #94a3b8; margin-bottom: 8px; line-height: 1.4; max-height: 40px; overflow: hidden; }
+    .queue-draft { font-size: 12px; color: #e2e8f0; line-height: 1.5; margin-bottom: 8px; background: #1e293b; padding: 8px; border-radius: 6px; max-height: 80px; overflow-y: auto; }
+    .queue-actions { display: flex; gap: 6px; }
+    .queue-btn { padding: 5px 12px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .btn-approve { background: #22c55e; color: white; }
+    .btn-approve:hover { background: #16a34a; }
+    .btn-edit { background: #3b82f6; color: white; }
+    .btn-edit:hover { background: #2563eb; }
+    .btn-skip { background: #475569; color: #e2e8f0; }
+    .btn-skip:hover { background: #64748b; }
+
+    .empty { padding: 40px 20px; text-align: center; color: #64748b; font-size: 13px; }
+    .empty .icon { font-size: 32px; margin-bottom: 8px; }
+
+    .scout-btn { display: block; width: calc(100% - 32px); margin: 12px 16px; padding: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
+    .scout-btn:hover { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+    .scout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .scout-btn.reddit { background: linear-gradient(135deg, #ff4500, #ff6834); margin-top: 0; }
+    .scout-btn.reddit:hover { background: linear-gradient(135deg, #e03d00, #ff5722); }
+
+    .platform-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; margin-right: 4px; text-transform: uppercase; }
+    .platform-badge.linkedin { background: #0a66c2; color: white; }
+    .platform-badge.reddit { background: #ff4500; color: white; }
+
+    .status-msg { padding: 8px 16px; font-size: 11px; text-align: center; }
+    .status-ok { color: #22c55e; }
+    .status-err { color: #ef4444; }
+
+    .settings { padding: 16px; }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+    .setting-label { color: #94a3b8; }
+    .setting-value { color: #e2e8f0; font-weight: 600; }
+
+    .footer { padding: 12px 16px; border-top: 1px solid #1e293b; text-align: center; }
+    .link { color: #60a5fa; text-decoration: none; font-size: 11px; }
+    .link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚡ SpotCircuit Scout</h1>
+    <div class="stats" id="stats">Loading...</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="queue">Queue <span class="badge" id="queue-count">0</span></div>
+    <div class="tab" data-tab="posted">Posted</div>
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+
+  <div id="tab-queue">
+    <div id="queue-list"></div>
+    <button class="scout-btn" id="run-scout">🔍 Scout LinkedIn</button>
+    <button class="scout-btn reddit" id="run-scout-reddit">🔍 Scout Reddit</button>
+  </div>
+
+  <div id="tab-posted" style="display:none">
+    <div id="posted-list"></div>
+  </div>
+
+  <div id="tab-settings" style="display:none">
+    <div class="settings">
+      <div class="setting-row">
+        <span class="setting-label">Server</span>
+        <span class="setting-value" id="server-status">Checking...</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Database</span>
+        <span class="setting-value" id="db-status">Checking...</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Auto-scout</span>
+        <span class="setting-value">Every 30 min (Paperclip)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-msg" id="status-msg"></div>
+
+  <div class="footer">
+    <a href="https://spotcircuit.github.io/clarity-wiki-site/" target="_blank" class="link">Wiki</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/spotcircuit/clarity-framework" target="_blank" class="link">GitHub</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.spotcircuit.com" target="_blank" class="link">SpotCircuit</a>
+  </div>
+
+  <script src="scripts/popup.js"></script>
+</body>
+</html>

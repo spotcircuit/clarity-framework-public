@@ -1,0 +1,73 @@
+client: spotcircuit
+last_updated: 2026-04-08
+
+platform:
+  framework: Next.js 15 (App Router)
+  language: TypeScript
+  styling: Tailwind CSS
+  hosting: Vercel (auto-deploy on push to main)
+  blog: Ghost CMS (headless, API integration)
+  analytics: Ahrefs, Microsoft Clarity, Google Analytics
+  repo: github.com/spotcircuit/spotcircuit
+  domain: www.spotcircuit.com
+
+site_structure:
+  core_pages:
+    - /           # Homepage - agentic AI hero + 6 service cards
+    - /services   # 6 revenue streams with feature lists
+    - /clarity    # Framework showcase (3 knowledge systems, 9 commands, self-learn loop)
+    - /about      # Brian's story, beliefs, connect links
+    - /blog       # Ghost CMS integration
+    - /contact    # Contact form + Google Calendar booking
+    - /privacy    # Privacy policy
+    - /terms      # Terms of service
+  components:
+    - Header.tsx (flat nav, no dropdowns)
+    - Footer.tsx (simple links + social)
+    - GlobalSchemaManager.tsx (Organization + WebSite + WebPage graph)
+    - ContactForm.tsx
+    - FaqAccordion.tsx
+    - schemas/LegalPageSchema.tsx
+  redirects:
+    count: 38
+    config: vercel.json
+    pattern: "all old marketing pages -> nearest new equivalent (301 permanent)"
+
+seo_audit:
+  source: Ahrefs Site Audit
+  date: 2026-04-08
+  fixed:
+    - "hreflang removed (English-only site, was 91 errors)"
+    - "sitemap rewritten (was 60+ redirected pages, now 8 clean URLs)"
+    - "robots.txt sitemap URL fixed (was missing www.)"
+    - "GlobalSchemaManager rewritten for agentic AI positioning"
+    - "38 Vercel 301 redirects for all old pages"
+    - "all metadata files updated for new positioning"
+    - "28 old page directories deleted (industries, solutions, etc.)"
+    - "~25 unused components deleted (old schemas, nav, marketing widgets)"
+    - "ChatbotWidget removed from layout and deleted"
+    - "~25MB of unused images deleted (hvac, roofing, answercircuit, etc.)"
+    - "30+ root-level cruft files deleted (gemini scripts, CSVs, audit docs)"
+    - "2 deleted Ghost blog post slugs redirected to /blog"
+    - "contact page rewritten for new positioning"
+    - "blog, privacy, terms metadata updated"
+    - "CLAUDE.md rewritten for current site structure"
+  remaining: []
+
+positioning:
+  old: "AI-Powered Local SEO & Marketing (agency for contractors)"
+  new: "Agentic AI Engineering (framework licensing, consulting, Claude Code)"
+  revenue_streams:
+    - Clarity Framework (open source + enterprise support)
+    - AI Integration Consulting ($150-250/hr)
+    - Claude Code Implementation (teams)
+    - Knowledge Base Builder (Karpathy wiki as service)
+    - Document Processing Pipelines (multi-format ingest)
+    - Build in Public (blog, open source, community)
+
+build_stats:
+  shared_js: 92.7KB
+  total_deletions_across_session: "53,000+ lines"
+  total_files_removed: "445+"
+
+unvalidated_observations: []

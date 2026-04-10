@@ -1,0 +1,25 @@
+# clients/{client-name}/client.yaml
+# GITIGNORED -- contains tenant URLs, env var refs, project keys
+
+client:
+  name: {client-name}
+  display_name: {Client Display Name}
+  industry: {industry}
+
+project:
+  keys: []        # Jira project keys, ticket prefixes
+  channels: []    # Slack channels, communication links
+
+environment:
+  dev:
+    url: ~
+    access: readwrite
+  prod:
+    url: ~
+    access: readonly   # ALWAYS readonly for prod
+
+goal: >
+  {One paragraph description of what this engagement delivers}
+
+access_needed:
+  - "{What credentials/access is needed}"

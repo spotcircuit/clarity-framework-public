@@ -1,0 +1,42 @@
+# triage-agent.yaml -- Lightweight agent that routes issues to specialists
+#
+# Runs frequently, reads new unassigned issues, classifies, assigns.
+
+name: Triage Agent
+role: triage
+
+# Heartbeat routine
+heartbeat_routine: |
+  1. Query Paperclip API for unassigned issues in the Clarity Ops project
+  2. For each unassigned issue:
+     a. Read title and description
+     b. Classify:
+        - Contains "ingest", "raw/", "wiki" -> assign to wiki-curator
+        - Contains "build", "deploy", "site" -> assign to site-builder-agent
+        - Contains "expertise", "self-improve", "validate" -> assign to clarity-steward
+        - Unknown -> leave unassigned, add comment requesting clarification
+     c. Set priority based on keywords (error/urgent=high, else medium)
+     d. Update the issue with assignment and priority
+
+# Skills -- triage is lightweight, no /se: skills needed
+skills: []
+
+# Files this agent reads (for context only)
+reads:
+  - system/paperclip.yaml
+  - wiki/index.md
+
+# Files this agent writes -- none, triage only updates Paperclip issues
+writes: []
+
+cwd: /home/spotcircuit/clarity-framework
+
+env:
+  CLARITY_ROOT: /home/spotcircuit/clarity-framework
+
+# Guardrails
+rules:
+  - Never modify files -- only update Paperclip issues
+  - Always add a comment explaining the assignment reason
+  - Never assign to self
+  - If unsure, leave unassigned rather than guess wrong

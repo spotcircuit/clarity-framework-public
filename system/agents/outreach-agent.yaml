@@ -1,0 +1,48 @@
+# outreach-agent.yaml — Monitors comments, drafts replies, manages engagement
+#
+# Checks LinkedIn posts for new comments every 30 minutes.
+# Classifies comments, generates replies using outreach framework, humanizes, posts.
+
+name: Outreach Agent
+role: engineer
+
+heartbeat_routine: |
+  1. Run: python3 scripts/linkedin-monitor.py --auto-reply
+  2. This will:
+     a. Check your last 5 posts for new comments
+     b. Compare to system/social-state.json
+     c. For new comments: classify (question/objection/compliment)
+     d. Generate a reply using system/outreach/services.yaml context
+     e. Humanize the reply via Claude CLI
+     f. Post the reply via linkedin-reply.py
+  3. Alternate scouting between platforms each heartbeat:
+     a. Even hours: python3 scripts/linkedin-scout-cdp.py (LinkedIn)
+     b. Odd hours: python3 scripts/reddit-scout-cdp.py (Reddit)
+  4. Report results to the Paperclip issue
+
+skills:
+  - se:brief
+
+reads:
+  - system/social-state.json
+  - system/outreach/services.yaml
+  - system/outreach/reddit-strategy.yaml
+  - clients/spotcircuit/expertise.yaml
+  - wiki/index.md
+  - system/drafts/*.md
+
+writes:
+  - system/social-state.json
+  - system/drafts/reply-*.md
+
+cwd: /home/spotcircuit/clarity-framework
+
+rules:
+  - Never reply to your own comments (filter out YOUR_NAME)
+  - Always humanize before posting
+  - If unsure about the comment intent, save as draft instead of auto-posting
+  - Keep replies under 300 words
+  - Lead with value, not sales pitch
+  - If someone asks a technical question, answer it directly
+  - If someone is skeptical, lead with evidence
+  - Save every reply to system/drafts/ for audit trail

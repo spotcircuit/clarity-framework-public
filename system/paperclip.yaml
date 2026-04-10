@@ -1,0 +1,105 @@
+# paperclip.yaml -- Declarative config for Paperclip agent orchestration
+# Synced to Paperclip API via: bash scripts/paperclip-sync.sh
+#
+# This is the source of truth. Edit here, then sync.
+# Paperclip DB IDs are cached in system/.paperclip-ids.json after first sync.
+
+api_base: http://127.0.0.1:3100
+company_id: d7dfb458-5fbc-4afd-8b9e-f765d253726f
+
+# ---------------------------------------------------------------------------
+# Agent definitions
+# Each agent maps to a file in system/agents/{name}.yaml for detailed config.
+# Fields here are what Paperclip's POST /api/companies/{companyId}/agents needs.
+# ---------------------------------------------------------------------------
+agents:
+  clarity-steward:
+    name: Clarity Steward
+    description: >
+      Maintains expertise.yaml health across all clients and apps.
+      Runs /se:self-improve periodically, compresses bloated files,
+      validates YAML syntax, and promotes confirmed observations.
+    role: devops
+    definition_file: agents/clarity-steward.yaml
+    heartbeat_schedule: "0 */4 * * *"   # every 4 hours
+    budget_cents: 500                     # $5/mo cap
+
+  wiki-curator:
+    name: Wiki Curator
+    description: >
+      Keeps the wiki healthy. Processes raw/ intake, runs lint,
+      fixes broken links, updates index.md.
+    role: researcher
+    definition_file: agents/wiki-curator.yaml
+    heartbeat_schedule: "*/30 * * * *"   # every 30 minutes (checks raw/)
+    budget_cents: 300
+
+  site-builder-agent:
+    name: Site Builder Agent
+    description: >
+      Manages the site-builder app lifecycle. Runs builds, checks
+      deploy status, updates expertise.yaml with results.
+    role: engineer
+    definition_file: agents/site-builder-agent.yaml
+    heartbeat_schedule: "0 */6 * * *"   # every 6 hours
+    budget_cents: 800
+
+  social-media-agent:
+    name: Social Media Agent
+    description: >
+      Daily social media pipeline. Posts to LinkedIn + Facebook with
+      humanized content and card images. Generates, humanizes, posts, files to wiki.
+    role: cmo
+    definition_file: agents/social-media-agent.yaml
+    heartbeat_schedule: "0 9 * * 1-5"    # weekdays at 9am
+    budget_cents: 200
+
+  outreach-agent:
+    name: Outreach Agent
+    description: >
+      Monitors LinkedIn posts for new comments. Classifies, generates
+      replies using outreach framework, humanizes, and posts responses.
+    role: engineer
+    definition_file: agents/outreach-agent.yaml
+    heartbeat_schedule: "*/30 * * * *"  # every 30 minutes
+    budget_cents: 300
+
+  triage-agent:
+    name: Triage Agent
+    description: >
+      Receives new issues, classifies them, assigns to the right agent.
+      Lightweight -- just reads issue title/description and routes.
+    role: pm
+    definition_file: agents/triage-agent.yaml
+    heartbeat_schedule: "*/5 * * * *"    # every 5 minutes
+    budget_cents: 100
+
+# ---------------------------------------------------------------------------
+# Default project for issues created by Clarity commands
+# ---------------------------------------------------------------------------
+default_project:
+  name: Clarity Ops
+  # project_id is populated after first sync
+  project_id: null
+
+# ---------------------------------------------------------------------------
+# Event hooks -- maps Clarity events to Paperclip issue creation
+# ---------------------------------------------------------------------------
+hooks:
+  raw_file_added:
+    title_template: "Ingest: {filename}"
+    description_template: "New file in raw/: {filepath}. Run /se:wiki-ingest."
+    assignee: wiki-curator
+    priority: medium
+
+  self_improve_due:
+    title_template: "Self-improve: {target}"
+    description_template: "Run /se:self-improve {target}. Last run: {last_run}."
+    assignee: clarity-steward
+    priority: low
+
+  build_requested:
+    title_template: "Build: {app_name}"
+    description_template: "Build requested for {app_name}. Check specs/ and run pipeline."
+    assignee: site-builder-agent
+    priority: high
