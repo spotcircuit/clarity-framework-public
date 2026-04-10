@@ -5,7 +5,7 @@
 # Paperclip DB IDs are cached in system/.paperclip-ids.json after first sync.
 
 api_base: http://127.0.0.1:3100
-company_id: d7dfb458-5fbc-4afd-8b9e-f765d253726f
+company_id: YOUR_COMPANY_ID
 
 # ---------------------------------------------------------------------------
 # Agent definitions
