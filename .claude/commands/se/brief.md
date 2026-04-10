@@ -44,7 +44,7 @@ Output the following summary to the terminal:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CLARITY BRIEF: {display_name} ({client})
-Generated: {today} | SE Phase: {phase}/9 | SE Lead: {se_lead}
+Generated: {today} | Project Phase: {phase}/9 | Project Lead: {project_lead}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 WHAT THIS SOLUTION DOES

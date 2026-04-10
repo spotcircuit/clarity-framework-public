@@ -8,7 +8,7 @@ argument-hint: <client-name>
 
 Auto-generate a Phase 0 discovery document and seed `expertise.yaml` for a client engagement.
 Pulls from every available source: Jira, Slack, live tenant, codebase. Marks anything
-it cannot derive as `<!-- TODO -->` for the SE to fill in.
+it cannot derive as `<!-- TODO -->` for the engineer to fill in.
 
 ## Variables
 
@@ -335,10 +335,10 @@ Copy `clients/_templates/phase-0-discovery.md` as the base.
 
 Fill in every field you can derive from Steps 2-5. For every field you cannot fill:
 - Use `<!-- TODO: Ask {appropriate party} — {what specifically is needed} -->`
-- "appropriate party" = client, SE lead, Jira ticket owner, or "SE to confirm"
+- "appropriate party" = client, project lead, Jira ticket owner, or "team to confirm"
 
 **Required fills from data sources:**
-- Client name, SE Lead, Date → from client.yaml + current date
+- Client name, Project Lead, Date → from client.yaml + current date
 - Problem definition → from Jira epic/project description + Slack context
 - Trigger → from Jira tickets + Slack discussions
 - Human roles → from Jira assignees + Slack mentions
@@ -383,7 +383,7 @@ meta:
   display_name: {from client.yaml or Jira}
   phase: 0
   last_updated: {today}
-  se_lead: {from client.yaml or prompt SE}
+  project_lead: {from client.yaml or prompt SE}
 
 solution:
   description: {from Jira + Slack — or ~ if not found}

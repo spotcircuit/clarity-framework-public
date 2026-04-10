@@ -1,19 +1,19 @@
 ---
 allowed-tools: Read, Edit, Bash
-description: SE Design & Build Guidelines compliance check against a client's Phase 0 document
+description: Project readiness check against Phase 0 discovery document
 argument-hint: <client-name>
 ---
 
-# SE: Check
+# Check: Project Readiness
 
-Validates a client's `phase-0-discovery.md` against the SE Design & Build Guidelines Phase 0
-requirements. Reports what's compliant, what's incomplete, and what's missing entirely.
+Validates a client's `phase-0-discovery.md` against project readiness requirements.
+Reports what's compliant, what's incomplete, and what's missing entirely.
 Updates `compliance:` section in expertise.yaml with results.
 
 ## Variables
 
 CLIENT: $ARGUMENTS
-GUIDELINES: se-guidelines/design-and-build.md
+GUIDELINES: system/guidelines/project-readiness.md
 
 ## Resolution
 
@@ -37,7 +37,7 @@ EXPERTISE: BASE_DIR/expertise.yaml
 ## Step 1: Read Documents
 
 Read `BASE_DIR/phase-0-discovery.md` in full.
-Read `se-guidelines/design-and-build.md` sections §0.1, §0.2, §0.3.
+Read `system/guidelines/project-readiness.md` sections §0.1, §0.2, §0.3.
 
 ---
 
@@ -126,7 +126,7 @@ then append the following (replacing `{...}` with actual values):
 
 ✅ Passed `/se:check` on {today} — {N}/{total} checks passing, 0 TODO markers remaining.
 
-**Signed off by:** {se_lead from expertise.yaml}
+**Signed off by:** {project_lead from expertise.yaml}
 **Ready for:** Phase 1 — Data Model & Schema Design
 ```
 
@@ -144,7 +144,7 @@ then append the following (replacing `{...}` with actual values):
 - {gap 1}
 - {gap 2}
 
-**Signed off by:** {se_lead from expertise.yaml}
+**Signed off by:** {project_lead from expertise.yaml}
 ```
 
 This block is always replaced on re-run — it reflects the most recent check result.
