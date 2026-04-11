@@ -22,7 +22,7 @@ SpotCircuit is pivoting from an AI marketing agency (serving contractors, local 
 
 **Trigger:** Business pivot from local SEO agency to agentic AI engineering consultancy.
 **End state:** Website fully repositioned with new service pages, updated SEO, and blog infrastructure ready for content marketing.
-**Human roles:** Brian Pyatt (owner, sole engineer).
+**Human roles:** Project owner (sole engineer).
 
 ## Current State (2026-04-08)
 

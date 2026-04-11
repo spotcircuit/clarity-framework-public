@@ -7,7 +7,7 @@ Structured knowledge management for engineering teams using Claude Code.
 This is a set of structured prompts and conventions for Claude Code. It is not a CLI tool, SDK, or plugin. The slash commands are markdown files that Claude Code reads and executes as instructions.
 
 What you get:
-- **10 slash commands** that build and maintain a knowledge base for any project
+- **19 slash commands** that build and maintain a knowledge base for any project
 - **Three knowledge systems** (structured YAML, behavioral memory, Obsidian wiki) that serve different purposes and stay in sync
 - **A self-learn loop** where commands append findings as YAML entries, and a validation command checks each against the current codebase and either promotes or discards them
 - **Agent orchestration** via Paperclip with 6 pre-configured agents (optional)
@@ -75,11 +75,26 @@ cp apps/_templates/app.yaml apps/my-app/app.yaml
 | `/wiki-file <topic>` | File a conversation insight as a wiki page |
 | `/wiki-lint` | Health check: orphans, broken links, stale pages |
 
+### Development Workflow (ported from Forge)
+
+| Command | What It Does |
+|---|---|
+| `/new <name> <desc>` | Scaffold a new app with stack selection |
+| `/feature <app> <request>` | Full SDLC cycle: plan, build, test, self-learn |
+| `/bug <app> <symptom>` | Investigation-first minimal fix |
+| `/takeover <app>` | Onboard an existing codebase, build expertise |
+| `/plan <prompt>` | Create implementation spec in specs/ |
+| `/build <plan-file>` | Implement a plan top-to-bottom |
+| `/test <app>` | Run tests, parse results, optionally auto-fix |
+| `/review <app>` | Structured code review: correctness, security, patterns |
+| `/scout <app> <question>` | Read-only codebase investigation with structured report |
+| `/meta-prompt <desc>` | Generate a new slash command from a description |
+
 ## Directory Structure
 
 ```
 clarity-framework/
-  .claude/commands/se/    # 10 slash commands (the core product)
+  .claude/commands/     # 19 slash commands (the core product)
   clients/
     _templates/           # Copy these to start a new client
     spotcircuit/          # Working example
