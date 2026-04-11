@@ -1,0 +1,219 @@
+# ============================================================================
+# Demo API -- Clarity Expertise File
+# ============================================================================
+# Internal deployment tracking service. Tracks what's deployed where,
+# surfaces health metrics, and provides rollback capabilities.
+# Maintained by /se:self-improve and /se:discover commands.
+# ============================================================================
+
+app: demo-api
+repo: https://github.com/spotcircuit/demo-api
+last_updated: "2026-04-09"
+status: production
+tagline: "Internal deployment tracking -- know what's running where, roll back when it isn't."
+
+# ============================================================================
+# Architecture
+# ============================================================================
+architecture:
+  framework: FastAPI + Python 3.12
+  database: PostgreSQL 16 (async via asyncpg + SQLAlchemy 2.0)
+  cache: Redis 7 (deployment status cache, rate limiting)
+  container: Docker + docker-compose (local), ECS Fargate (prod)
+  ci: GitHub Actions (lint, test, build, deploy)
+  port: 8080
+  entrypoint: app/main.py
+  structure:
+    app/main.py:          "FastAPI app factory, lifespan events, middleware"
+    app/routes/:          "Route modules -- deployments, services, health, metrics"
+    app/models/:          "SQLAlchemy models + Pydantic schemas"
+    app/services/:        "Business logic -- deploy_service, rollback_service, metrics_service"
+    app/core/:            "Config, database session, Redis client, auth"
+    app/middleware/:       "Request logging, error handling, auth middleware"
+    alembic/:             "Database migrations"
+    tests/:               "pytest suite -- unit, integration, API"
+
+# ============================================================================
+# API Endpoints
+# ============================================================================
+api:
+  base_url: "http://localhost:8080"
+  auth: "Bearer token (internal service-to-service)"
+  endpoints:
+    - method: GET
+      path: /health
+      purpose: "Liveness + readiness check. Returns DB and Redis connection status."
+
+    - method: GET
+      path: /api/v1/deployments
+      purpose: "List deployments with filtering (service, environment, status, date range)"
+      params: "service_name, environment, status, since, until, limit, offset"
+
+    - method: POST
+      path: /api/v1/deployments
+      purpose: "Record a new deployment. Called by CI pipeline on successful deploy."
+      body: "service_name, version, environment, commit_sha, deployed_by, metadata"
+
+    - method: GET
+      path: /api/v1/deployments/{id}
+      purpose: "Get deployment details including rollback history"
+
+    - method: POST
+      path: /api/v1/deployments/{id}/rollback
+      purpose: "Trigger rollback to previous version. Records rollback event."
+      body: "reason, initiated_by"
+
+    - method: GET
+      path: /api/v1/services
+      purpose: "List tracked services with current deployment status per environment"
+
+    - method: GET
+      path: /api/v1/services/{name}/history
+      purpose: "Deployment history for a specific service across all environments"
+
+    - method: GET
+      path: /api/v1/metrics/deploy-frequency
+      purpose: "Deploy frequency over time (daily/weekly/monthly buckets)"
+      params: "service_name, environment, period, since"
+
+    - method: GET
+      path: /api/v1/metrics/rollback-rate
+      purpose: "Rollback rate as percentage of deployments, grouped by service"
+
+    - method: GET
+      path: /api/v1/metrics/lead-time
+      purpose: "Time from commit to deploy, p50/p90/p99 per service"
+
+# ============================================================================
+# Database
+# ============================================================================
+database:
+  orm: "SQLAlchemy 2.0 async (asyncpg driver)"
+  migrations: "Alembic with async support"
+  tables:
+    deployments: "id, service_name, version, environment, commit_sha, deployed_by, status, metadata, created_at, completed_at"
+    rollbacks: "id, deployment_id, previous_version, reason, initiated_by, status, created_at"
+    services: "name, description, repo_url, team, created_at, updated_at"
+  indexes:
+    - "deployments(service_name, environment, created_at DESC) -- main query path"
+    - "deployments(status) WHERE status = 'in_progress' -- partial index for active deploys"
+    - "rollbacks(deployment_id) -- FK lookup"
+
+# ============================================================================
+# Caching
+# ============================================================================
+caching:
+  provider: Redis 7
+  strategy: "Cache-aside with TTL"
+  cached_paths:
+    - path: "/api/v1/services"
+      ttl: 30s
+      key: "services:list"
+      invalidation: "On new deployment or rollback"
+    - path: "/api/v1/metrics/*"
+      ttl: 5m
+      key: "metrics:{endpoint}:{params_hash}"
+      invalidation: "Time-based only (metrics are approximate)"
+  connection_pool:
+    max_connections: 20
+    timeout: 5s
+
+# ============================================================================
+# Testing
+# ============================================================================
+testing:
+  runner: "pytest + pytest-asyncio + httpx"
+  total_tests: 47
+  breakdown:
+    test_deployments_api: 14  # CRUD + filtering + pagination
+    test_rollback_api: 8     # Rollback flows + error cases
+    test_services_api: 6     # Service listing + history
+    test_metrics_api: 7      # All three metrics endpoints
+    test_models: 5           # Pydantic validation + SQLAlchemy relationships
+    test_cache: 4            # Cache hit/miss/invalidation
+    test_auth: 3             # Token validation + missing auth + expired token
+  fixtures:
+    conftest.py: "Async test client, test database, Redis mock, seed data factory"
+  coverage: "89% line coverage (core/ and middleware/ at 95%+)"
+
+# ============================================================================
+# Deployment
+# ============================================================================
+deployment:
+  local:
+    method: "docker-compose up"
+    services: "api (FastAPI), db (Postgres), cache (Redis)"
+    seed: "python -m app.seed -- populates 50 sample deployments"
+  production:
+    platform: AWS ECS Fargate
+    region: us-east-1
+    container: "ECR image, built by GitHub Actions on merge to main"
+    database: "RDS Postgres (db.t3.micro, free tier)"
+    cache: "ElastiCache Redis (cache.t3.micro)"
+  ci:
+    provider: GitHub Actions
+    pipeline:
+      - step: lint
+        tool: "ruff check + ruff format --check"
+      - step: test
+        tool: "pytest --cov (against Postgres + Redis in services)"
+      - step: build
+        tool: "docker build, push to ECR"
+      - step: deploy
+        tool: "aws ecs update-service --force-new-deployment"
+
+# ============================================================================
+# Key Decisions
+# ============================================================================
+decisions:
+  - decision: "FastAPI over Express/Hono"
+    rationale: "Team is Python-native. Async support is first-class. Pydantic validation eliminates a whole class of bugs. Auto-generated OpenAPI docs."
+
+  - decision: "Redis for caching instead of in-memory"
+    rationale: "ECS tasks can scale to multiple instances. In-memory cache would be per-instance. Redis gives shared cache + built-in TTL + pub/sub for invalidation."
+
+  - decision: "asyncpg connection pooling (pool_size=10, max_overflow=5)"
+    rationale: "Default SQLAlchemy pool_size=5 caused pool exhaustion at 20 concurrent requests during load test. Bumped to 10 with 5 overflow. Postgres max_connections=100 on RDS micro gives headroom."
+
+  - decision: "Alembic for migrations over raw SQL"
+    rationale: "Auto-generates migration scripts from model changes. Rollback support. Consistent across environments."
+
+  - decision: "Bearer token auth instead of OAuth/JWT"
+    rationale: "Internal service only. Simple shared secret per calling service. No user sessions to manage. Rotate quarterly via Secrets Manager."
+
+# ============================================================================
+# API Gotchas
+# ============================================================================
+api_gotchas:
+  - gotcha: "Postgres connection pool exhaustion at 20 concurrent requests"
+    detail: "Default asyncpg pool_size=5 plus SQLAlchemy's own pool caused 'connection pool exhausted' errors under moderate load. Each request holds a connection for the full request lifecycle."
+    mitigation: "Set pool_size=10, max_overflow=5 in create_async_engine(). Added connection pool metrics to /health endpoint. Monitor pool_checked_out gauge."
+
+  - gotcha: "Redis key expiry race condition on cache invalidation"
+    detail: "Deployment record write + cache invalidation are not atomic. Between cache delete and next read, a stale value can be re-cached if another request reads before the delete propagates."
+    mitigation: "Use Redis UNLINK (async delete) + short TTL (30s) on service list cache. Stale window is acceptable for internal dashboard. Do NOT use Redis transactions for this -- overkill."
+
+  - gotcha: "Docker healthcheck timing in ECS"
+    detail: "ECS health check starts immediately but FastAPI needs ~3s for Alembic migration check + connection pool warm-up. Tasks get killed before they're ready."
+    mitigation: "Set healthCheckGracePeriodSeconds=30 in ECS service definition. Healthcheck endpoint returns 503 until startup_complete flag is set."
+
+  - gotcha: "Alembic autogenerate misses partial indexes"
+    detail: "Alembic's autogenerate does not detect partial indexes (WHERE clause). The deployments(status) partial index must be added manually."
+    mitigation: "Manual migration for partial indexes. Added a comment in the model file referencing the migration."
+
+  - gotcha: "httpx.AsyncClient must be shared, not created per-request"
+    detail: "Creating a new AsyncClient per outgoing request leaks connections. In tests, this manifests as 'Event loop is closed' errors on teardown."
+    mitigation: "Single AsyncClient created in lifespan, stored in app.state. Tests use a shared fixture client."
+
+  - gotcha: "Pydantic V2 model_validate vs V1 from_orm"
+    detail: "SQLAlchemy models need model_validate(obj, from_attributes=True) in Pydantic V2. The old .from_orm() raises AttributeError with no helpful message."
+    mitigation: "Set model_config = ConfigDict(from_attributes=True) on all response schemas. Caught this during the V1->V2 migration."
+
+# ============================================================================
+# Unvalidated Observations
+# ============================================================================
+# Populated by /se:* commands. Run /se:self-improve to validate and promote.
+unvalidated_observations:
+  - "Rollback endpoint should verify the target version actually existed before -- currently accepts any version string"
+  - "Metrics queries are slow (>500ms) when filtering across all services for 90-day range -- needs materialized view or pre-aggregation"
+  - "The seed script creates deployments with future timestamps when run with --days=90 and the date math wraps around -- cosmetic but confusing in demos"

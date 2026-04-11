@@ -1,0 +1,133 @@
+# Demo Corp — expertise.yaml
+# Managed by /se:* commands. Do not edit unvalidated_observations manually.
+
+client: demo-corp
+display_name: Demo Corp
+last_updated: 2026-04-08
+
+architecture:
+  frontend:
+    framework: "Next.js 14 (App Router)"
+    hosting: "Vercel (auto-deploy from main)"
+    note: "Migrated from Pages Router in Q1. Some legacy pages still use getServerSideProps."
+  backend:
+    services:
+      deploy-service:
+        lang: "Python 3.12 / FastAPI"
+        port: 8001
+        purpose: "Orchestrates deployments, manages pipeline state"
+        repo: "democorp-eng/deploy-service"
+      notification-service:
+        lang: "Python 3.12 / FastAPI"
+        port: 8002
+        purpose: "Slack/Teams notifications, email digests"
+        repo: "democorp-eng/notification-service"
+      webhook-router:
+        lang: "Python 3.12 / FastAPI"
+        port: 8003
+        purpose: "Ingests webhooks from Jira, GitHub, CodePipeline. Normalizes and routes events."
+        repo: "democorp-eng/webhook-router"
+    shared:
+      auth: "Okta OIDC tokens validated via python-jose. Service-to-service uses shared JWT secret."
+      logging: "Structured JSON logs → Datadog via dd-trace"
+      config: "SSM Parameter Store (dev/staging). Secrets Manager (prod)."
+  database:
+    primary: "PostgreSQL 16 on RDS (db.r6g.large). 3 schemas: deployments, notifications, audit."
+    cache: "Redis 7 on ElastiCache. Used for session tokens, rate limiting, pipeline state cache."
+    note: "Redis chosen over DynamoDB for session store because sub-ms latency needed for auth middleware."
+  infrastructure:
+    region: us-east-1
+    vpc: "10.0.0.0/16 — 3 AZs, public/private subnets per AZ"
+    ecs: "Fargate for all services. No EC2 instances to manage."
+    cdn: "CloudFront for Next.js static assets"
+    dns: "Route 53 → CloudFront (frontend), API Gateway (backend)"
+
+api_integrations:
+  jira:
+    type: "REST (Jira Cloud Platform API v3)"
+    auth: "OAuth 2.0 (3LO) — app registered in Atlassian Developer Console"
+    base_url: "https://democorp.atlassian.net/rest/api/3"
+    webhook_url: "/webhooks/jira"
+    events_subscribed:
+      - "jira:issue_updated"
+      - "jira:issue_created"
+      - "sprint_started"
+      - "sprint_closed"
+    gotchas:
+      - "Webhook payloads include changelog but NOT the full issue. Must call GET /issue/{key} for custom fields."
+      - "Jira webhooks retry on 5xx — sends duplicate events. Webhook-router deduplicates by webhookEvent + timestamp within 60s window."
+      - "Transition IDs are NOT stable across Jira projects. Hardcoding transition IDs breaks when workflow changes. Always use GET /transitions first."
+      - "Rate limit is 100 req/10s per user. Bulk operations (sprint close with 40 tickets) need queuing."
+  slack:
+    type: "REST (Slack Web API) + Events API"
+    auth: "Bot token (xoxb-*). Scopes: chat:write, channels:read, users:read, reactions:write"
+    gotchas:
+      - "Rate limit is 1 message/sec per channel (chat.postMessage). Burst deploy notifications hit this. Queue with 1.1s spacing."
+      - "Thread replies (thread_ts) do NOT notify channel members unless reply_broadcast=true. Deploy updates go to threads but the final status posts to channel."
+      - "Bot cannot post to private channels unless explicitly invited. Failed silently with 'channel_not_found' — not 'not_in_channel'. Took 2 hours to debug."
+      - "Block Kit message limit is 50 blocks. Deploy summary with >15 services hits this. Paginate or summarize."
+  teams:
+    type: "Microsoft Graph API v1.0"
+    auth: "Azure AD app registration. Client credentials flow for daemon. Delegated for user context."
+    gotchas:
+      - "Meeting transcript API requires Teams Premium license. Demo Corp has it but only for 20 seats."
+      - "Graph API rate limits are per-tenant, not per-app. Other apps in the tenant count against the same limit."
+      - "Transcript extraction returns VTT format. Parsing speaker attribution from VTT is unreliable — speakers identified by display name which may not match Slack/Jira usernames."
+  github:
+    type: "REST + Webhooks"
+    auth: "GitHub App (installation token)"
+    webhook_events: ["push", "pull_request", "check_run", "deployment_status"]
+    gotchas:
+      - "check_run events fire multiple times per CI run (queued, in_progress, completed). Filter on status=completed only."
+      - "GitHub webhook secret rotation requires updating both GitHub and webhook-router simultaneously. Schedule during low-traffic window."
+  aws_codepipeline:
+    type: "AWS SDK (boto3) + EventBridge"
+    auth: "IAM role assumed via Okta SAML (cross-account for staging/prod)"
+    gotchas:
+      - "Pipeline execution events arrive via EventBridge 30-90 seconds after actual state change. Do not use for real-time status."
+      - "CodePipeline action names are truncated to 100 chars. Long service names get cut off in notifications."
+
+key_decisions:
+  redis_for_sessions:
+    decision: "Redis for session store and pipeline state cache"
+    rationale: "Sub-ms read latency for auth middleware hot path. DynamoDB p99 was 8ms — unacceptable for every API call."
+    tradeoff: "Redis is not durable. Session loss on failover is acceptable (users re-auth via Okta SSO)."
+  no_graphql:
+    decision: "REST APIs instead of GraphQL"
+    rationale: "Team has deep REST experience. GraphQL would add learning curve for 2 senior devs and complicate webhook integrations."
+    tradeoff: "Frontend sometimes over-fetches. Accepted tradeoff for team velocity."
+  feature_flags:
+    decision: "LaunchDarkly for feature flags"
+    rationale: "Already in use for product features. Extending to deployment pipeline (canary rollouts, kill switches)."
+    tradeoff: "Another vendor dependency. Cost is $450/month but worth it for instant rollback capability."
+  event_driven:
+    decision: "Event-driven via webhooks instead of polling"
+    rationale: "Polling Jira + GitHub + CodePipeline every 30s = thousands of unnecessary API calls. Webhooks are push-based."
+    tradeoff: "Webhook delivery is not guaranteed. Built retry/dedup layer in webhook-router."
+
+testing:
+  framework: "pytest + pytest-asyncio (backend), Playwright (E2E)"
+  coverage: "Backend: 74%. Goal: 80% by end of engagement."
+  patterns:
+    - "Integration tests mock external APIs (Jira, Slack, GitHub) via httpx respx"
+    - "E2E tests use a dedicated Jira project (DEMO-TEST) and Slack channel (#test-deploys)"
+    - "Pipeline state tests use Redis testcontainers"
+  ci: "GitHub Actions. Backend tests run on every PR. E2E runs nightly and before release."
+
+deployment:
+  pipeline: "GitHub Actions → ECR → ECS Fargate (rolling update)"
+  stages:
+    - "PR merge to main → build Docker image → push to ECR"
+    - "Deploy to dev (auto) → run smoke tests"
+    - "Deploy to staging (auto) → run full E2E suite"
+    - "Deploy to prod (manual approval via Slack reaction — :rocket: on the deploy message)"
+  feature_flags: "New features behind LaunchDarkly flags. Enable in staging first, then prod (10% → 50% → 100%)."
+  rollback: "ECS task definition rollback. Previous task definition always kept. Rollback takes ~90 seconds."
+  monitoring: "Datadog APM traces on all services. Alert on p99 latency > 500ms or error rate > 1%."
+
+unvalidated_observations:
+  - "CodePipeline execution history API returns max 100 results with no cursor pagination. For deploy history beyond 100, need to store events in our own database. Discovered 2026-04-05."
+  - "Slack bot token refresh fails silently when Okta session expires. Notifications stop without any error log. Need a health check endpoint that verifies Slack token validity. Discovered 2026-04-06."
+  - "Jira custom field for 'Deploy Target Environment' is customfield_10089 in Demo Corp's instance. This is not documented anywhere — found by inspecting webhook payload. Discovered 2026-04-07."
+  - "Redis ElastiCache failover during Tuesday's maintenance window caused 12 seconds of auth failures across all services. Need circuit breaker on Redis reads with fallback to skip cache. Discovered 2026-04-08."
+  - "Teams meeting transcripts older than 30 days are not accessible via Graph API — returns 404. Need to ingest transcripts within the retention window. Discovered 2026-04-08."
