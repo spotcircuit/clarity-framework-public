@@ -1,89 +1,303 @@
-# Site Builder: Build Journal
+# Site Builder — Build Journal
 
-How the Clarity Framework was used to build a full-stack AI site generator in roughly 8 hours.
+How a working product was built across four Claude Code sessions using the Clarity framework to accumulate context between them.
 
-**What was built:** Paste a Google Maps URL, get a deployed React website in 60 seconds. 7-step async pipeline, 13-section inline editor, deployed to Cloudflare Pages.
-
-**Stack:** FastAPI + Vue 3 + React 18 + Claude Sonnet + Gemini Flash + Playwright
-
-**Source:** [github.com/spotcircuit/site-builder](https://github.com/spotcircuit/site-builder)
+This is raw. Some things broke. The framework caught those breakages and turned them into knowledge.
 
 ---
 
-## Hour 1-2: Discovery & Architecture
+## Session 1 — Foundation (Day 1, ~3 hours)
 
-### Creating the app entry
+### Bootstrapping
+
+Started with `/se:create site-builder`. Clarity prompted for the basics:
 
 ```
-> /se:create site-builder
+> App name: site-builder
+> One-line purpose: Generate and deploy business websites from a Google Maps URL
+> Tech stack (frontend): Vue 3 + TypeScript
+> Tech stack (backend): FastAPI + Python
+> Status: building
 ```
 
-This created the `apps/site-builder/` directory and prompted for the `app.yaml` config. The key decisions went in here -- not in a design doc, not in a Slack thread, in the structured config:
+Created `apps/site-builder/app.yaml`. Mostly empty at this point — just the scaffold.
+
+Ran `/se:discover site-builder`. Phase 0 came back with a reasonable decomposition:
+
+```
+Phase 0 identified:
+  - URL parsing (extract place_id from Maps URLs)
+  - Data scraping (business name, address, hours, reviews, photos)
+  - Content generation (Claude, section-by-section)
+  - Static site output (React + Tailwind, Vite build)
+  - Deploy target TBD
+```
+
+### First pipeline
+
+Built four files:
+- `maps_url_parser.py` — regex for the 4 different Maps URL formats (short links, search results, place links, CID links)
+- `maps_scraper.py` — Playwright, navigate to the listing, pull structured data
+- `site_generator.py` — prompt Claude with business data, get back section content
+- `react_builder.py` — template React app, inject content, `npm run build`
+
+First end-to-end generation worked on attempt #3. The first two failures:
+
+1. Maps URL parser didn't handle the `maps/place/` format with `!3d` latitude embedded. Had to add a second regex path.
+2. Claude returned markdown in the hero section (### headings, **bold**) which broke the React template. Added a post-processing strip.
+
+The generated site rendered. But it was... bad. Generic small business copy. "Welcome to [Business Name], your trusted partner in [industry]." Zero personality.
+
+### expertise.yaml after Session 1
 
 ```yaml
-# apps/site-builder/app.yaml
-app:
-  name: site-builder
-  type: tool
+app: site-builder
+last_updated: 2026-04-05
 
-codebase:
-  framework: FastAPI (backend) + Vue 3 (frontend) + React 18 (generated sites)
+architecture:
+  frontend: Vue 3 + TypeScript
+  backend: FastAPI + Python 3.13
+  ai_content: Claude Sonnet (claude-sonnet-4-20250514)
 
-environment:
-  dev:
-    ports:
-      backend: 9405
-      frontend: 5177
-  prod:
-    backend: Railway
-    frontend: Vercel
+pipeline:
+  steps:
+    - parsing_url: maps_url_parser.py
+    - scraping_profile: maps_scraper.py (Playwright)
+    - generating_content: site_generator.py (Claude)
+    - building_site: react_builder.py (npm build)
 
-goal: >
-  Search any business on Google Maps, get a premium React website in 60 seconds.
-  Scrape listing, generate AI content with Claude, build React + Tailwind site,
-  deploy to Cloudflare Pages, provide inline editor for customization.
-
-dependencies:
-  - "ANTHROPIC_API_KEY (Claude content generation)"
-  - "GEMINI_API_KEY (image generation, optional)"
-  - "CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID (deployment)"
-  - "VITE_GOOGLE_MAPS_API_KEY (Places autocomplete)"
+unvalidated_observations:
+  - "Maps URL parser fails on !3d-embedded lat/lng format — fixed, needs more format testing"
+  - "Claude returns markdown formatting in content sections — strip_markdown post-processor added"
+  - "Generated content is generic, reads like template fill-in-the-blank. Needs richer business context."
+  - "Reviews contain the real voice of the business — should feed top reviews into content prompt"
+  - "No image generation yet — hero section looks empty without a banner"
 ```
 
-Every dependency is listed. Every port is declared. If someone picks this project up cold, they know what they need before reading a single line of code.
-
-### Running discover
+Ran `/se:improve`:
 
 ```
-> /se:discover site-builder
+/se:improve site-builder
+
+Reviewing 5 unvalidated observations...
+
+✓ PROMOTED: "Maps URL parser fails on !3d-embedded lat/lng format"
+  → Added to pipeline.known_issues
+  Reason: Confirmed in maps_url_parser.py, regex updated to handle 4 URL formats.
+
+✓ PROMOTED: "Claude returns markdown formatting in content sections"
+  → Added to pipeline.known_issues
+  Reason: strip_markdown() exists in site_generator.py, confirmed behavior.
+
+✓ PROMOTED: "Generated content is generic — needs richer business context"
+  → Added to architecture notes
+  Reason: Verified. Prompt only receives name + address + category. Reviews, services
+  list, and website copy are not included. This is the #1 quality bottleneck.
+
+○ DEFERRED: "Reviews contain real voice — should feed into content prompt"
+  Reason: Not implemented yet. Keeping as observation until scraper captures reviews.
+
+○ DEFERRED: "No image generation yet"
+  Reason: Not implemented. Keeping as observation.
+
+3 promoted, 0 discarded, 2 deferred.
 ```
 
-Since this is an internal app (not a client with Jira/Slack/tenant), `/discover` adapted. It scanned the codebase path, read the existing README and source files, and generated the Phase 0 document. Output looked like:
+---
+
+## Session 2 — Pipeline Hardening (Day 2, ~2.5 hours)
+
+### The scraper fight
+
+Opened the session. Ran `/se:brief site-builder`:
 
 ```
-Clarity Discover: site-builder
+/se:brief site-builder
 
-Sources Queried:
-  Jira:    -- N/A (internal app)
-  Slack:   -- N/A (internal app)
-  Tenant:  -- N/A (internal app)
-  Code:    Found -- FastAPI + Vue 3 + React 18
+Site Builder — Briefing
+━━━━━━━━━━━━━━━━━━━━━━
+Status: Building (Day 2)
+Pipeline: 4 steps, URL→Scrape→Generate→Build
+Key gap: Content quality (generic output)
+Unvalidated: 2 deferred observations (reviews, images)
+Next priority: Enrich business data before generation step
 
-Phase 0 Document: apps/site-builder/phase-0-discovery.md
-  Fields auto-filled:       14
-  Fields requiring input:    3
-
-Expertise File: apps/site-builder/expertise.yaml
-  Architecture: seeded from codebase scan
-  Pipeline: 7 steps identified from modules/
-  Known issues: 0 (fresh build)
+Suggested focus:
+  1. Add review scraping to maps_scraper.py
+  2. Consider website scraping as supplementary data source
+  3. Image generation for hero/gallery sections
 ```
 
-The Phase 0 doc captured the architecture before a single feature was complete. This matters because by hour 4, the architecture had already evolved twice -- and without the Phase 0 baseline, those decisions would have been invisible.
+Good brief. Started on review scraping immediately.
 
-### Initial expertise.yaml
+Then the scraper started failing. Google Maps had started returning a cookie consent interstitial that wasn't there yesterday. Playwright would click "Accept All" but the page would reload into a different layout.
 
-At this point, expertise.yaml was skeletal:
+Tried three approaches:
+1. **Wait for selector** — flaky. The consent button has dynamic class names.
+2. **Set cookies beforehand** — worked for one run, then Google rotated the consent cookie format.
+3. **Playwright stealth plugin** — `playwright-stealth`. This was the fix. Patches the navigator object, WebGL fingerprint, etc. Maps loads cleanly.
+
+Lost about 45 minutes to this. But the framework captured it.
+
+### Website scraper
+
+Added `website_scraper.py` as an optional enrichment step. If the Maps listing has a website URL, we scrape it for:
+- Services/products mentioned
+- About page copy
+- Any testimonials or review snippets
+- Color scheme (pulls primary/secondary from CSS custom properties)
+
+This was the unlock for content quality. The Claude prompt now receives:
+
+```
+Business: {name}
+Category: {category}
+Address: {address}
+Hours: {hours}
+Rating: {rating} ({review_count} reviews)
+Top Reviews: {top_5_reviews}
+Services Found: {services_from_website}
+About Copy: {about_text_from_website}
+```
+
+Night and day difference in generated content. The sites actually sounded like the business.
+
+### Image generation
+
+Added Gemini 2.5 Flash for image generation. First attempt used complex scene descriptions and Gemini would timeout at the default 10-second limit. Bumped to 30 seconds with retry logic (exponential backoff, max 3 attempts).
+
+Even at 30s, about 15% of generations fail on the first attempt. The retry handles it. Added a fallback to gradient placeholder images so the build never blocks on image generation.
+
+### expertise.yaml after Session 2
+
+```yaml
+app: site-builder
+last_updated: 2026-04-06
+
+architecture:
+  frontend: Vue 3 + TypeScript
+  backend: FastAPI + Python 3.13 + asyncio
+  ai_content: Claude Sonnet (claude-sonnet-4-20250514)
+  ai_images: Gemini 2.5 Flash Image
+  deploy_primary: TBD
+
+pipeline:
+  steps:
+    - parsing_url: maps_url_parser.py
+    - scraping_profile: maps_scraper.py (Playwright + stealth)
+    - scraping_website: website_scraper.py (optional)
+    - generating_content: site_generator.py (Claude)
+    - generating_images: image_generator.py (Gemini)
+    - building_site: react_builder.py (npm build)
+  known_issues:
+    - "Maps URL parser: 4 URL formats handled, may be more edge cases"
+    - "Claude markdown in output: strip_markdown post-processor handles this"
+    - "Google Maps blocks headless Chrome without stealth plugin"
+    - "Gemini timeouts on complex prompts — 30s timeout + retry (3 attempts)"
+
+scraping:
+  maps_data: name, category, address, hours, rating, review_count, top_reviews, photos, website_url
+  website_data: services, about_text, testimonials, color_scheme
+  stealth: playwright-stealth required (consent interstitial + bot detection)
+
+unvalidated_observations:
+  - "Website scraper color extraction is brittle — only works with CSS custom properties, not inline styles"
+  - "Gemini prompt for hero images works best with simple subject descriptions, not scene compositions"
+  - "WebSocket progress reporting would be useful — generation takes 45-90 seconds"
+  - "Need to handle Maps listings with no website URL gracefully (skip website scraper, don't error)"
+```
+
+Ran `/se:improve`:
+
+```
+/se:improve site-builder
+
+Reviewing 4 unvalidated observations...
+
+✓ PROMOTED: "Website scraper color extraction is brittle"
+  → Added to scraping.known_limitations
+  Reason: Confirmed. Only checks :root and body CSS custom properties.
+  Many sites use Tailwind classes or inline hex — these are missed.
+
+✓ PROMOTED: "Gemini hero images: simple subjects > scene compositions"
+  → Added to pipeline.ai_images notes
+  Reason: Confirmed via testing. "A modern plumbing company" generates better
+  than "An aerial view of a plumbing van parked outside a suburban home at golden hour."
+
+✓ PROMOTED: "Need to handle Maps listings with no website URL"
+  → Added to pipeline.steps (website scraper now correctly marked "optional")
+  Reason: Confirmed. Added conditional skip in orchestrator.
+
+○ DISCARDED: "WebSocket progress reporting would be useful"
+  Reason: Already implemented. ws_manager.py sends stage-by-stage progress.
+  This observation was stale — written before the WebSocket endpoint was added
+  later in the same session.
+
+3 promoted, 1 discarded, 0 deferred.
+```
+
+The discarded observation is a good example. I added WebSocket progress later in the session but had written the observation earlier. `/se:improve` caught that it was already done.
+
+---
+
+## Session 3 — Editor (Day 3, ~1.5 hours)
+
+### The problem
+
+Generated sites were good, but every business wants to tweak "just a few things." Running the whole pipeline again for a word change is wasteful (45-90 second generation, API costs). Needed an inline editor.
+
+### 13-section editor
+
+Built the editor panel in Vue with 13 collapsible sections:
+
+| # | Section | Editable Fields |
+|---|---------|----------------|
+| 1 | Hero | headline, subheadline, CTA text, CTA link, background image |
+| 2 | About | title, body text, image |
+| 3 | Services | list of {name, description, icon} |
+| 4 | Gallery | list of images with captions |
+| 5 | CTA | headline, body, button text, button link |
+| 6 | FAQ | list of {question, answer} |
+| 7 | Testimonials | list of {name, text, rating} |
+| 8 | Why Choose Us | list of {title, description, icon} |
+| 9 | How It Works | list of {step, title, description} |
+| 10 | Contact | address, phone, email, hours, map embed |
+| 11 | Design | theme preset, primary color, secondary color, font |
+| 12 | SEO | title tag, meta description, OG image |
+| 13 | Visibility | toggle sections on/off |
+
+Each section can be independently regenerated with AI (sends just that section's context to Claude, not the whole site).
+
+### Live preview
+
+iframe with `srcdoc` injection. Three device widths:
+- Desktop (1280px)
+- Tablet (768px)
+- Mobile (375px)
+
+The tricky part was getting the preview to update without full page reloads. Used `postMessage` to send section-level updates to the iframe, which patches the DOM. Full rebuild only happens on theme change or explicit "Rebuild" click.
+
+### Dirty detection
+
+This was a small but important detail. Before triggering a rebuild, compare current editor state to last-built state via `JSON.stringify` comparison. If nothing changed, skip the build. If only content changed (not theme/design), do a quick rebuild (inject content, no full Vite build). If theme changed, full rebuild.
+
+```
+Quick preview: ~2 seconds (content injection)
+Full rebuild:  ~15 seconds (Vite build)
+Redeploy:      ~30 seconds (Cloudflare push)
+```
+
+### Theme presets
+
+Five presets, each defining colors, font stack, border radius, shadow style:
+
+- **Modern** — Inter, blue-600 primary, clean shadows, rounded-lg
+- **Classic** — Georgia, navy primary, no shadows, sharp corners
+- **Bold** — Montserrat, orange-500 primary, heavy shadows, rounded-xl
+- **Minimal** — System UI, gray-900 primary, no shadows, no borders
+- **Elegant** — Playfair Display, gold primary, subtle shadows, rounded-sm
+
+### expertise.yaml after Session 3
 
 ```yaml
 app: site-builder
@@ -93,281 +307,138 @@ architecture:
   frontend: Vue 3 + TypeScript + Pinia + Tailwind CSS
   backend: FastAPI + Python 3.13 + asyncio
   generated_sites: React 18 + Tailwind CSS (Vite build)
-
-pipeline:
-  steps: []  # not built yet
-
-unvalidated_observations:
-  - "Initial discover run -- codebase scaffolded, no pipeline modules yet (2026-04-07)"
-  - "Decision: Claude for content, Gemini for images -- Claude better at structured JSON, Gemini better at on-brand imagery"
-  - "Decision: Cloudflare Pages primary deploy, Vercel fallback -- CF has faster edge propagation"
-```
-
-Three observations sitting in the unvalidated queue. The framework doesn't pretend decisions are facts -- they sit in `unvalidated_observations` until `/improve` can verify them against reality.
-
----
-
-## Hour 3-4: Core Pipeline
-
-### The 7 steps
-
-Each pipeline module was built individually and tested in isolation. The async pipeline looks like this in the backend:
-
-```
-Parse URL -> Scrape Maps -> Scrape Website -> Generate Content -> Generate Images -> Build Site -> Deploy
-```
-
-The modules, in order:
-
-| Step | Module | Lines | What it does |
-|------|--------|-------|-------------|
-| 1 | `maps_url_parser.py` | 293 | Parses Google Maps URLs, extracts place ID, handles 15+ URL formats |
-| 2 | `maps_scraper.py` | 1137 | Playwright browser scraping of the full business listing |
-| 3 | `website_scraper.py` | 475 | Optionally scrapes the business's own website for extra content |
-| 4 | `site_generator.py` | 1039 | Claude generates structured JSON content for all 13 sections |
-| 5 | `image_generator.py` | 302 | Gemini generates hero + section images matching the business |
-| 6 | `react_builder.py` | 471 | Assembles React components, injects content, runs `npm build` |
-| 7 | `cloudflare_deployer.py` | 258 | Deploys dist/ to Cloudflare Pages via wrangler CLI |
-
-### What /improve caught
-
-After building the scraper and content generator, observations were piling up. Running `/improve` processed them:
-
-```
-> /se:improve site-builder
-
-Self-Improve: site-builder
-
-Observations processed: 7
-  Confirmed + integrated: 5
-  Stale + discarded:      1
-  Left unverified:        1
-
-expertise.yaml: 38 lines / 1000
-
-Integrated into:
-  - architecture: added ai_content and ai_images model names
-  - pipeline: populated all 7 steps with module names
-  - unvalidated: kept "Cloudflare has 100 project limit" for verification
-```
-
-Here is what that actually looked like. Before `/improve`:
-
-```yaml
-unvalidated_observations:
-  - "Google Maps scraper needs Playwright -- headless Chrome required for JS-rendered content"
-  - "Maps URL has 15+ formats: /maps/place/, /maps?cid=, shortened goo.gl, place_id param, etc."
-  - "Claude returns markdown in JSON strings sometimes -- need post-processing to strip ```json fences"
-  - "Gemini 2.5 Flash can generate images -- cheaper than DALL-E, good enough for hero sections"
-  - "Cloudflare Pages has a 100 project limit per account -- need auto-cleanup"
-  - "Website scraping is optional -- many small businesses don't have websites"
-  - "React build takes 8-12 seconds locally -- acceptable for 60-second target"
-```
-
-After `/improve` promoted confirmed observations:
-
-```yaml
-architecture:
   ai_content: Claude Sonnet (claude-sonnet-4-20250514)
   ai_images: Gemini 2.5 Flash Image
+  realtime: WebSocket (/ws)
 
 pipeline:
   steps:
     - parsing_url: maps_url_parser.py
-    - scraping_profile: maps_scraper.py (Playwright)
-    - scraping_website: website_scraper.py (optional)    # <-- "optional" came from observation
+    - scraping_profile: maps_scraper.py (Playwright + stealth)
+    - scraping_website: website_scraper.py (optional)
     - generating_content: site_generator.py (Claude)
     - generating_images: image_generator.py (Gemini)
     - building_site: react_builder.py (npm build)
-    - deploying: cloudflare_deployer.py / vercel_deployer.py
+    - deploying: TBD
 
-deployment:
-  cloudflare_limit: auto-deletes oldest project when limit hit  # <-- promoted from observation
-
-unvalidated_observations:
-  - "React build takes 8-12 seconds locally -- need to verify in Railway container"
-```
-
-Six observations became structured knowledge. One stayed unvalidated because it hadn't been tested in production yet. The Cloudflare 100-project limit became a documented deployment constraint with its mitigation (auto-delete oldest) baked right into the expertise file.
-
-### The gotchas that would have been lost
-
-Without the framework, these would have been forgotten by the next session:
-
-- **Maps URL parsing:** Google Maps has at least 15 URL formats. The parser handles `/maps/place/`, `/maps?cid=`, `goo.gl` shortlinks, bare place IDs, `@lat,lng` coordinates, and the new `/maps/search/` format. This was a full day of edge cases compressed into one module.
-
-- **Claude JSON fencing:** Claude sometimes wraps JSON responses in triple-backtick markdown fences even when told not to. The content generator strips these automatically. This got captured as an observation, confirmed through testing, and promoted into the architecture notes.
-
-- **Playwright async patterns:** Maps scraping requires waiting for specific DOM elements that load after multiple JS re-renders. The scraper uses a custom wait strategy, not just `page.wait_for_load_state("networkidle")` -- because Google Maps never truly reaches network idle.
-
----
-
-## Hour 5-6: Editor & Frontend
-
-### The 13-section editor
-
-The inline editor lets users customize every section of the generated site before deploying. Each section maps to a React component:
-
-```
-Hero, About, Services, Gallery, CTA, FAQ, Testimonials,
-Why Choose Us, How It Works, Contact, Design, SEO, Visibility
-```
-
-The Vue frontend uses Pinia for state management. The store (`siteBuilderStore.ts`) handles the full lifecycle: input -> progress tracking via WebSocket -> result display -> editing -> rebuild -> redeploy.
-
-### What /improve caught this time
-
-```
-> /se:improve site-builder
-
-Self-Improve: site-builder
-
-Observations processed: 4
-  Confirmed + integrated: 4
-  Stale + discarded:      0
-
-Integrated into:
-  - editor: sections list, feature list
-  - editor: dirty detection mechanism documented
-```
-
-The observations that got promoted:
-
-```yaml
-# Before (unvalidated)
-unvalidated_observations:
-  - "Dirty detection uses JSON.stringify comparison of current vs saved content"
-  - "Device preview: desktop/tablet/mobile iframe widths with transition animation"
-  - "Theme system: 5 presets (Modern, Classic, Bold, Minimal, Elegant) apply via CSS variables"
-  - "AI regeneration: can regenerate individual sections via Claude without rebuilding whole site"
-
-# After (structured)
 editor:
-  sections: 13 (Hero, About, Services, Gallery, CTA, FAQ, Testimonials,
-                 Why Choose Us, How It Works, Contact, Design, SEO, Visibility)
+  sections: 13 (Hero, About, Services, Gallery, CTA, FAQ, Testimonials, Why Choose Us, How It Works, Contact, Design, SEO, Visibility)
   features:
     - live iframe preview with device switching
     - AI section regeneration via Claude
     - theme presets (Modern, Classic, Bold, Minimal, Elegant)
     - dirty detection via JSON comparison
     - quick preview vs full rebuild vs redeploy
+
+scraping:
+  maps_data: name, category, address, hours, rating, review_count, top_reviews, photos, website_url
+  website_data: services, about_text, testimonials, color_scheme
+  stealth: playwright-stealth required
+
+unvalidated_observations:
+  - "Pinia store for editor state makes dirty detection trivial — just compare $state snapshots"
+  - "iframe postMessage for live preview is faster than srcdoc replacement but needs origin checking"
+  - "AI section regen should include surrounding sections as context to maintain tone consistency"
+  - "Theme preset switch sometimes leaves stale CSS variables — need to clear before applying new theme"
 ```
 
-The dirty detection detail matters. It's not obvious that JSON comparison is the mechanism -- a future developer might try to implement deep object comparison or a diff library. The expertise file records the actual implementation decision.
-
----
-
-## Hour 7: Testing
-
-### ACT-LEARN-REUSE
-
-The test suite uses a self-improving pattern:
-
-1. **ACT** -- Run all tests, collect results
-2. **LEARN** -- Analyze failures, identify patterns
-3. **REUSE** -- Update expertise with test patterns so future test runs are informed
-
-98 tests across 4 layers:
-
-| Layer | Framework | Tests | What they cover |
-|-------|-----------|-------|----------------|
-| Backend unit | pytest + httpx | 33 | API endpoints, Pydantic models, pipeline modules |
-| Frontend store | Vitest | 33 | Pinia store actions, state transitions, WebSocket handling |
-| E2E smoke | Playwright | 21 | Full UI flow without hitting external APIs |
-| E2E full gen | Playwright | 11 | Full pipeline including real API calls (~5 min) |
-
-After the test suite was solid:
+Ran `/se:improve`:
 
 ```
-> /se:improve site-builder
+/se:improve site-builder
 
-Self-Improve: site-builder
+Reviewing 4 unvalidated observations...
 
-Observations processed: 3
-  Confirmed + integrated: 3
+✓ PROMOTED: "Pinia store makes dirty detection trivial"
+  → Added to editor.features (dirty detection via JSON comparison)
+  Reason: Confirmed. useSiteStore.$state is snapshotted after each build.
+  Comparison is just JSON.stringify(current) !== JSON.stringify(lastBuilt).
 
-Integrated into:
-  - testing: test counts and frameworks per layer
-  - testing: pattern name (ACT-LEARN-REUSE)
-```
+✓ PROMOTED: "iframe postMessage faster than srcdoc replacement"
+  → Added to editor.implementation_notes
+  Reason: Confirmed. srcdoc causes full iframe reload (~800ms flicker).
+  postMessage patches DOM in-place (~50ms, no flicker).
 
-```yaml
-# Promoted to structured testing section
-testing:
-  backend_unit: 33 tests (pytest + httpx)
-  frontend_store: 33 tests (vitest)
-  e2e_smoke: 21 tests (Playwright)
-  e2e_full_gen: 11 tests (Playwright, ~5 min)
-  pattern: ACT-LEARN-REUSE (self-improving)
+✓ PROMOTED: "AI section regen should include surrounding sections for tone"
+  → Added to pipeline.ai_content notes
+  Reason: Confirmed and implemented. Section regen prompt now includes
+  prev_section and next_section summaries for context.
+
+○ DISCARDED: "Theme preset switch leaves stale CSS variables"
+  Reason: Fixed during this session. clearThemeVariables() called before
+  applyTheme(). No longer reproducible.
+
+3 promoted, 1 discarded, 0 deferred.
 ```
 
 ---
 
-## Hour 8: Deployment & Polish
+## Session 4 — Testing + Deploy (Day 4, ~1 hour)
 
-### The deployment chain
+### Test suite
 
-Three platforms, one sync mechanism:
+Built 98 tests across four layers using the ACT-LEARN-REUSE pattern (test failures inform future test generation):
+
+**Backend unit (33 tests, pytest + httpx):**
+- URL parser: all 4 Maps URL formats + 6 edge cases
+- Scraper: mock responses for Maps and website data extraction
+- Generator: prompt construction, markdown stripping, section isolation
+- Builder: template injection, Vite build invocation
+- API routes: all endpoints, error handling, auth
+
+**Frontend store (33 tests, vitest):**
+- Pinia stores: pipeline state machine, editor state, theme application
+- Dirty detection: changed vs unchanged, content-only vs theme changes
+- WebSocket: connection, reconnection, message parsing
+
+**E2E smoke (21 tests, Playwright):**
+- Navigation, form submission, editor interactions
+- Device preview switching
+- Theme preset application
+- Section visibility toggles
+
+**E2E full generation (11 tests, Playwright, ~5 min):**
+- Full pipeline: URL input through deployed site
+- Error paths: invalid URL, scraper failure, generation timeout
+- Editor: edit, preview, rebuild, redeploy cycle
+
+One test caught a real bug: the "redeploy" button was enabled even when the site hadn't been rebuilt after an edit. The dirty detection was checking editor state vs last-built state, but "last deployed" state was a separate concept. Added a third state snapshot.
+
+### Deployment
+
+Set up the deploy pipeline:
+
+- **Backend**: Railway (auto-deploy from `spotcircuit/site-builder` standalone repo)
+- **Frontend**: Vercel (auto-deploy from same standalone repo, different root)
+- **Generated sites**: Cloudflare Pages (wrangler CLI from backend)
+
+The standalone repo is synced from the monorepo via a GitHub Action that runs on push to main. It extracts just the `apps/site_builder/` subtree and force-pushes to `spotcircuit/site-builder`.
+
+Hit one issue: Cloudflare Pages has a project limit (varies by plan). Added auto-cleanup that deletes the oldest project when the limit is hit. Not ideal — should probably use subdomains under one project instead. Logged as observation.
+
+### Final /brief
 
 ```
-Monorepo (agent-experts/apps/site_builder/)
-    |
-    | GitHub Action (on push to main)
-    v
-Standalone repo (spotcircuit/site-builder)
-    |
-    +----> Railway (auto-deploy backend)
-    +----> Vercel (auto-deploy frontend)
-```
+/se:brief site-builder
 
-Generated sites deploy to Cloudflare Pages (primary) or Vercel (fallback).
-
-The GitHub Action extracts just the `apps/site_builder/` subtree and pushes it to the standalone repo. Railway and Vercel watch that repo and auto-deploy on push.
-
-### Final /improve and /brief
-
-```
-> /se:improve site-builder
-
-Self-Improve: site-builder
-
-Observations processed: 2
-  Confirmed + integrated: 2
-
-Integrated into:
-  - deployment: Railway + Vercel + sync mechanism
-  - deployment: cloudflare auto-cleanup on limit
-```
-
-```
-> /se:brief site-builder
-
---- Site Builder Brief ---
-
+Site Builder — Briefing
+━━━━━━━━━━━━━━━━━━━━━━
 Status: Deployed and functional
-Backend: Railway (auto-deploy from standalone repo)
-Frontend: Vercel (auto-deploy from standalone repo)
+Pipeline: 7 steps (URL → Scrape Maps → Scrape Website → Generate Content → Generate Images → Build → Deploy)
+Editor: 13 sections, live preview, 5 themes, dirty detection
+Tests: 98 across 4 layers (33 unit + 33 store + 21 smoke + 11 full)
+Deploy: Railway (API) + Vercel (UI) + Cloudflare Pages (sites)
 
-Architecture: FastAPI + Vue 3 + React 18
-AI: Claude Sonnet (content) + Gemini Flash (images)
-Pipeline: 7 async steps, URL to deployed site in ~60 seconds
+No unvalidated observations.
+All promoted or discarded via /improve.
 
-Editor: 13 sections, 5 themes, live preview, AI regeneration
-Testing: 98 tests (33 backend + 33 frontend + 21 E2E smoke + 11 E2E full)
-
-Open questions:
-  - Revenue model: demo tool vs productized service?
-  - Expert system migration: move .claude/commands/experts/ into Clarity?
-  - Orchestrator cleanup: pre-Paperclip code still in monorepo
+Architecture is stable. Open question: productization path
+(demo tool vs paid service vs white-label).
 ```
 
-The brief pulls everything from expertise.yaml and notes.md. No digging through code, no checking deployment dashboards. One command, full project status.
+### Final expertise.yaml
 
----
-
-## The Final expertise.yaml
-
-After 8 hours and roughly 5 `/improve` cycles, the expertise file went from empty to this:
+This is what ended up in `expertise.yaml` — the version checked into this repo:
 
 ```yaml
 app: site-builder
@@ -401,8 +472,7 @@ testing:
   pattern: ACT-LEARN-REUSE (self-improving)
 
 editor:
-  sections: 13 (Hero, About, Services, Gallery, CTA, FAQ, Testimonials,
-                 Why Choose Us, How It Works, Contact, Design, SEO, Visibility)
+  sections: 13 (Hero, About, Services, Gallery, CTA, FAQ, Testimonials, Why Choose Us, How It Works, Contact, Design, SEO, Visibility)
   features:
     - live iframe preview with device switching
     - AI section regeneration via Claude
@@ -419,45 +489,31 @@ deployment:
 unvalidated_observations: []
 ```
 
-46 lines. Every section populated. Zero unvalidated observations remaining. A new developer reading this file knows the full system in 2 minutes.
+### Wiki capture
+
+Ran `/se:wiki-file deployment-pattern-monorepo-to-standalone` to capture the GitHub Action sync pattern as a wiki page. This is a reusable pattern — any monorepo app could use the same approach:
+
+```
+wiki/patterns/monorepo-standalone-sync.md created
+  - Describes the GitHub Action subtree extraction
+  - Links to [[site-builder-architecture]], [[deployment-patterns]]
+  - Tagged: #deployment #github-actions #monorepo
+```
 
 ---
 
-## Key Takeaways
+## What the framework actually did
 
-### What the framework caught that would have been lost
+Across four sessions, Clarity:
 
-1. **The Cloudflare 100-project limit.** Discovered during hour 4, would have been a production outage weeks later. Instead it became a deployment constraint with auto-cleanup built in.
+1. **Kept context alive between sessions.** Each `/se:brief` at session start gave a clean summary of where things stood, what was unvalidated, and what to focus on next. No re-reading code to remember what happened yesterday.
 
-2. **Claude's JSON fencing behavior.** An LLM quirk that causes silent content corruption. Caught during content generation testing, promoted to architecture knowledge.
+2. **Caught stale observations.** Two observations were discarded because they described problems that got fixed later in the same session. Without `/se:improve`, those would have lingered as "known issues" that weren't issues anymore.
 
-3. **Google Maps URL format diversity.** 15+ formats. Without structured capture, the next person to touch the parser would rediscover each format one support ticket at a time.
+3. **Forced specificity.** The observation format pushes you toward concrete statements ("Gemini timeouts on complex prompts, need 30s timeout + retry") instead of vague notes ("image gen is slow sometimes"). The promotion step verifies these against actual code.
 
-4. **The "optional" annotation on website scraping.** A small word in the pipeline config that prevents someone from treating a scraping failure as a pipeline failure. Many small businesses simply don't have websites.
+4. **Grew `expertise.yaml` naturally.** It started with 5 lines of architecture and ended with a complete operational reference. No one sat down and wrote documentation — it accumulated through the build process.
 
-### How expertise.yaml grew
+5. **Created reusable knowledge.** The wiki page for monorepo-to-standalone sync isn't site-builder-specific. Next time any app needs that pattern, it's already documented with the gotchas included.
 
-```
-Hour 1:  3 lines   (app name + date + empty sections)
-Hour 2:  12 lines  (architecture seeded by /discover)
-Hour 4:  28 lines  (pipeline + deployment after /improve)
-Hour 6:  38 lines  (editor section after /improve)
-Hour 7:  42 lines  (testing section after /improve)
-Hour 8:  46 lines  (deployment finalized, observations cleared)
-```
-
-The file grew only when observations were confirmed. It never contained speculation. Every line was validated against the running system.
-
-### The self-learn loop in practice
-
-The pattern that emerged:
-
-1. **Build something** -- write code, hit a wall, find a workaround
-2. **Observation gets appended** -- the workaround or gotcha goes into `unvalidated_observations`
-3. **Run /improve** -- observations get checked against reality
-4. **Confirmed facts get promoted** -- they move from the unvalidated queue into structured sections
-5. **Stale observations get discarded** -- things that were true during development but not in production
-
-This is the opposite of documentation-first. You don't stop building to write docs. The framework captures knowledge as a side effect of working, then structures it later. The expertise file is always accurate because it only contains things that have been verified.
-
-The build took 8 hours. The expertise file took zero additional hours -- it was a byproduct of the process.
+Total build time: ~8 hours across 4 sessions. Of that, maybe 30 minutes was framework overhead (running commands, reviewing promotions). The rest was actual building. The payoff is that anyone picking this up — human or AI — can read `expertise.yaml` and `BUILD_JOURNAL.md` and have full context in minutes instead of hours.
