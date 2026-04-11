@@ -1,46 +1,485 @@
+# ============================================================================
+# Site Builder -- Clarity Expertise File
+# ============================================================================
+# Accumulated operational knowledge for the site-builder app.
+# Maintained by /se:self-improve and /se:discover commands.
+# Source of truth for architecture, gotchas, and decisions.
+# ============================================================================
+
 app: site-builder
-last_updated: 2026-04-08
+repo: https://github.com/spotcircuit/site-builder
+last_updated: "2026-04-10"
+status: production
+tagline: "Search any business on Google Maps, get a premium React website in 60 seconds."
 
+# ============================================================================
+# Architecture
+# ============================================================================
 architecture:
-  frontend: Vue 3 + TypeScript + Pinia + Tailwind CSS
-  backend: FastAPI + Python 3.13 + asyncio
-  generated_sites: React 18 + Tailwind CSS (Vite build)
-  ai_content: Claude Sonnet (claude-sonnet-4-20250514)
-  ai_images: Gemini 2.5 Flash Image
-  deploy_primary: Cloudflare Pages (wrangler CLI)
-  deploy_fallback: Vercel REST API
-  realtime: WebSocket (/ws)
+  frontend:
+    framework: Vue 3 + TypeScript + Pinia + Tailwind CSS
+    port: 5177
+    deploy: Vercel (auto-deploy from standalone repo)
+    key_components:
+      - PlacesAutocomplete.vue    # Google Places search input
+      - ProgressPanel.vue         # Real-time pipeline step tracker (WebSocket)
+      - DevicePreview.vue         # iframe preview with mobile/tablet/desktop switching
+      - SiteHistory.vue           # Previously generated sites list
+      - SeoScorePanel.vue         # SEO metrics display
+      - TemplateCards.vue         # Template selection grid
+    stores:
+      - siteBuilderStore.ts       # Single Pinia store -- all state + actions
+    services:
+      - api.ts                    # REST client (axios)
+      - websocket.ts              # WebSocket client for progress streaming
+      - mapsLoader.ts             # Google Maps JS API lazy loader
 
+  backend:
+    framework: FastAPI + Python 3.13 + asyncio
+    port: 9405
+    deploy: Railway (auto-deploy from standalone repo)
+    entrypoint: backend/main.py
+    total_lines: ~5,500 across 13 modules
+    modules:
+      maps_url_parser:
+        file: maps_url_parser.py
+        lines: 293
+        purpose: Parse Google Maps URLs and extract place IDs, coordinates, search queries
+      maps_scraper:
+        file: maps_scraper.py
+        lines: 1141
+        purpose: Playwright-based scraper for Google Maps business profiles (photos, reviews, hours, services, location)
+        note: "Selectors from getrankedlocal production scrapers, confirmed working 2025"
+      website_scraper:
+        file: website_scraper.py
+        lines: 1060
+        purpose: Scrape business website for supplementary content (optional step)
+      site_generator:
+        file: site_generator.py
+        lines: 1107
+        purpose: Claude API content generation -- business data to structured website content
+        model: claude-sonnet-4-20250514
+        auth_fallback: "Falls back to Claude Code OAuth token (~/.claude/.credentials.json) when no ANTHROPIC_API_KEY"
+      image_generator:
+        file: image_generator.py
+        lines: 302
+        purpose: Gemini 2.5 Flash Image generation for site visuals
+      react_builder:
+        file: react_builder.py
+        lines: 566
+        purpose: "Assembles Vite + React + Tailwind project from templates, injects data.json, runs npm build"
+      cloudflare_deployer:
+        file: cloudflare_deployer.py
+        lines: 258
+        purpose: "Deploy to Cloudflare Pages via wrangler CLI (includes CDN, DDoS protection, edge caching)"
+      vercel_deployer:
+        file: vercel_deployer.py
+        lines: 157
+        purpose: Deploy to Vercel via REST API (fallback provider)
+      websocket_manager:
+        file: websocket_manager.py
+        lines: 180
+        purpose: Singleton WebSocket broadcaster for real-time pipeline progress
+      rate_limiter:
+        file: rate_limiter.py
+        lines: 154
+        purpose: IP-based rate limiting + Cloudflare Turnstile bot verification
+      section_mapper:
+        file: section_mapper.py
+        lines: 271
+        purpose: Maps editor section types to React component data structures
+
+  generated_sites:
+    framework: React 18 + Tailwind CSS
+    build_tool: Vite
+    templates:
+      modern: "react/ -- Original clean template"
+      bold: "react-bold/ -- Bold/dramatic layout"
+      elegant: "react-elegant/ -- Clean/minimal layout"
+    output: "Static HTML (data.json is the only file that changes per generation)"
+
+  realtime: "WebSocket at /ws -- streams pipeline step progress to frontend"
+
+# ============================================================================
+# Pipeline
+# ============================================================================
 pipeline:
+  overview: "Async 7-step pipeline. Each step broadcasts progress via WebSocket. Full generation takes ~60 seconds."
   steps:
-    - parsing_url: maps_url_parser.py
-    - scraping_profile: maps_scraper.py (Playwright)
-    - scraping_website: website_scraper.py (optional)
-    - generating_content: site_generator.py (Claude)
-    - generating_images: image_generator.py (Gemini)
-    - building_site: react_builder.py (npm build)
-    - deploying: cloudflare_deployer.py / vercel_deployer.py
+    - step: 1
+      status_key: parsing_url
+      module: maps_url_parser.py
+      does: "Parse Google Maps URL to extract place ID, coordinates, or search query. Also accepts direct website URLs."
 
-testing:
-  backend_unit: 33 tests (pytest + httpx)
-  frontend_store: 33 tests (vitest)
-  e2e_smoke: 21 tests (Playwright)
-  e2e_full_gen: 11 tests (Playwright, ~5 min)
-  pattern: ACT-LEARN-REUSE (self-improving)
+    - step: 2
+      status_key: scraping_profile
+      module: maps_scraper.py
+      does: "Launch headless Playwright browser, navigate to Maps listing, extract name, address, phone, hours, photos, reviews, services, coordinates."
 
+    - step: 3
+      status_key: scraping_website
+      module: website_scraper.py
+      does: "If business has a website link, scrape it for supplementary content. Optional -- pipeline continues without it."
+
+    - step: 4
+      status_key: generating_content
+      module: site_generator.py
+      does: "Send scraped business data to Claude Sonnet. Returns structured JSON with hero text, about section, services, FAQ, testimonials, and SEO metadata."
+
+    - step: 5
+      status_key: generating_images
+      module: image_generator.py
+      does: "Generate business-relevant images via Gemini 2.5 Flash. Skipped if GEMINI_API_KEY not configured."
+
+    - step: 6
+      status_key: building_site
+      module: react_builder.py
+      does: "Copy React template, inject data.json, run 'npm install && npm run build'. Produces static dist/ folder."
+
+    - step: 7
+      status_key: deploying
+      module: cloudflare_deployer.py / vercel_deployer.py
+      does: "Deploy static dist/ to Cloudflare Pages (primary) or Vercel (fallback). Returns live URL."
+
+  deploy_resolution: |
+    Auto-selection priority:
+    1. If user explicitly picks "cloudflare" or "vercel", use that
+    2. If "auto" or unset: prefer Cloudflare if configured, else Vercel
+    3. If "none": skip deployment entirely (local preview only)
+
+# ============================================================================
+# API Endpoints
+# ============================================================================
+api:
+  base_url: "http://localhost:9405"
+  endpoints:
+    - method: POST
+      path: /api/generate-site
+      purpose: "Start async generation pipeline. Returns job_id immediately."
+      params: "maps_url, website_url, business_name, business_category, template_name, deploy_target, business_context, turnstile_token"
+      note: "At least one of maps_url or website_url required. business_name required when using website_url without maps_url."
+
+    - method: GET
+      path: /api/job/{job_id}
+      purpose: "Poll job status (pending/running/complete/error) and pipeline step progress"
+
+    - method: GET
+      path: /api/job/{job_id}/data
+      purpose: "Get editable data.json payload for the editor"
+
+    - method: GET
+      path: /api/job/{job_id}/download
+      purpose: "Download generated site as zip archive"
+
+    - method: POST
+      path: /api/rebuild-site
+      purpose: "Rebuild site with edited data.json (quick preview rebuild)"
+
+    - method: POST
+      path: /api/generate-section
+      purpose: "AI-regenerate a single section via Claude (services, FAQ, testimonials, why_choose_us, process_steps)"
+
+    - method: POST
+      path: /api/redeploy-site
+      purpose: "Re-deploy an edited site to the same hosting provider"
+
+    - method: DELETE
+      path: /api/site/{project_name}
+      purpose: "Delete a deployed site from hosting provider"
+
+    - method: POST
+      path: /api/upload-image
+      purpose: "Upload user image for editor (served at /uploads/)"
+
+    - method: GET
+      path: /api/templates
+      purpose: "List available site templates (modern, bold, elegant)"
+
+    - method: GET
+      path: /api/sites
+      purpose: "List deployed sites from deploy_log.jsonl"
+
+    - method: DELETE
+      path: /api/sites
+      purpose: "Clear deploy log"
+
+    - method: GET
+      path: /api/errors
+      purpose: "Read error log (last N entries from error_log.jsonl)"
+
+    - method: DELETE
+      path: /api/errors
+      purpose: "Clear error log"
+
+    - method: GET
+      path: /health
+      purpose: "Health check -- returns deployment config status and rate limit info"
+
+    - method: WebSocket
+      path: /ws
+      purpose: "Real-time pipeline progress. Server broadcasts step updates as JSON messages."
+
+# ============================================================================
+# Editor
+# ============================================================================
 editor:
-  sections: 13 (Hero, About, Services, Gallery, CTA, FAQ, Testimonials, Why Choose Us, How It Works, Contact, Design, SEO, Visibility)
+  section_count: 16
+  sections:
+    - Hero
+    - About
+    - Services
+    - Gallery
+    - CTA (Call to Action)
+    - FAQ
+    - Testimonials
+    - Why Choose Us
+    - How It Works
+    - Contact
+    - Design (theme + colors)
+    - SEO (meta tags + descriptions)
+    - Visibility (show/hide sections)
+    - Social (social media links)
+    - Section Order (drag reorder)
+    - Rich Text Fields (inline formatting)
   features:
-    - live iframe preview with device switching
-    - AI section regeneration via Claude
-    - theme presets (Modern, Classic, Bold, Minimal, Elegant)
-    - dirty detection via JSON comparison
-    - quick preview vs full rebuild vs redeploy
+    - "Live iframe preview with device switching (mobile / tablet / desktop)"
+    - "AI section regeneration -- send prompt + context to Claude, get new content"
+    - "Theme presets: Modern, Classic, Bold, Minimal, Elegant"
+    - "Dirty detection via JSON deep comparison (warns before losing edits)"
+    - "Quick preview (instant rebuild) vs full rebuild vs redeploy workflow"
+    - "Image upload with drag-and-drop"
+    - "Generate modal with custom prompt input per section"
+  editor_components: 17
+  component_list:
+    - EditorPanel.vue            # Main editor container
+    - EditorAccordion.vue        # Collapsible section wrapper
+    - EditorSectionHero.vue
+    - EditorSectionAbout.vue
+    - EditorSectionServices.vue
+    - EditorSectionGallery.vue
+    - EditorSectionCTA.vue
+    - EditorSectionFAQ.vue
+    - EditorSectionTestimonials.vue
+    - EditorSectionWhyChooseUs.vue
+    - EditorSectionHowItWorks.vue
+    - EditorSectionContact.vue
+    - EditorSectionDesign.vue
+    - EditorSectionSEO.vue
+    - EditorSectionVisibility.vue
+    - EditorSectionSocial.vue
+    - EditorSectionOrder.vue
+    - GenerateModal.vue          # AI regeneration prompt dialog
+    - ImageField.vue             # Image upload/URL input
+    - RichTextField.vue          # Inline rich text editing
 
+# ============================================================================
+# Testing
+# ============================================================================
+testing:
+  pattern: "ACT-LEARN-REUSE (self-improving test suite)"
+  backend_unit:
+    count: 44
+    breakdown:
+      test_api: 32 tests       # API endpoint tests (httpx AsyncClient)
+      test_models: 12 tests    # Pydantic model validation tests
+    runner: pytest + pytest-asyncio
+    fixtures: "conftest.py -- shared AsyncClient fixture, sample job data"
+  frontend_unit:
+    count: 65
+    breakdown:
+      siteBuilderStore: 56 tests  # Pinia store tests (state, actions, getters)
+      TemplateCards: 6 tests      # Component rendering tests
+      api_service: 3 tests        # API client tests
+    runner: vitest
+  e2e_smoke:
+    count: 22
+    file: e2e/site-builder.spec.ts
+    runner: Playwright
+    speed: "~30 seconds"
+  e2e_full_generation:
+    count: 11
+    file: e2e/full-generation.spec.ts
+    runner: Playwright
+    speed: "~5 minutes (hits real APIs)"
+  total_tests: 142
+
+# ============================================================================
+# Deployment
+# ============================================================================
 deployment:
-  backend: Railway (auto-deploy from standalone repo)
-  frontend: Vercel (auto-deploy from standalone repo)
-  sync: GitHub Action syncs monorepo -> standalone repo on push to main
-  cloudflare_limit: auto-deletes oldest project when limit hit
+  backend:
+    platform: Railway
+    method: "Auto-deploy from spotcircuit/site-builder standalone repo"
+    container: Dockerfile
+    port: 9405
+    host: 0.0.0.0
+  frontend:
+    platform: Vercel
+    method: "Auto-deploy from same standalone repo (frontend/ root)"
+  generated_sites:
+    primary: "Cloudflare Pages (wrangler CLI direct upload)"
+    fallback: "Vercel REST API"
+  sync:
+    method: "GitHub Action syncs apps/site_builder/ from monorepo to standalone repo on push to main"
+  job_management:
+    storage: "In-memory dict (not persisted across restarts)"
+    ttl_undeployed: "3 days"
+    ttl_deployed: "7 days (2x undeployed)"
+    cleanup: "Background asyncio task checks hourly, deletes expired jobs + build dirs"
+  logging:
+    errors: "error_log.jsonl -- append-only, queryable via /api/errors"
+    deploys: "deploy_log.jsonl -- append-only, queryable via /api/sites"
 
+# ============================================================================
+# Environment Variables
+# ============================================================================
+env_vars:
+  backend:
+    - name: ANTHROPIC_API_KEY
+      required: true
+      purpose: "Claude API for content generation"
+    - name: GEMINI_API_KEY
+      required: false
+      purpose: "Gemini for AI image generation (skipped if missing)"
+    - name: CLOUDFLARE_API_TOKEN
+      required: "one of cloudflare or vercel"
+      purpose: "Cloudflare Pages deployment"
+    - name: CLOUDFLARE_ACCOUNT_ID
+      required: "one of cloudflare or vercel"
+      purpose: "Cloudflare account identifier"
+    - name: VERCEL_TOKEN
+      required: "one of cloudflare or vercel"
+      purpose: "Vercel deployment (fallback)"
+    - name: VERCEL_TEAM_ID
+      required: false
+      purpose: "Vercel team identifier"
+    - name: SITE_BUILDER_PORT
+      required: false
+      purpose: "Server port (default: 9405)"
+    - name: SITE_BUILDER_HOST
+      required: false
+      purpose: "Server host (default: 0.0.0.0)"
+  frontend:
+    - name: VITE_API_BASE_URL
+      purpose: "Backend URL (Railway production URL)"
+    - name: VITE_GOOGLE_MAPS_API_KEY
+      purpose: "Google Places Autocomplete"
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+dependencies:
+  backend:
+    runtime:
+      - "fastapi>=0.115.0"
+      - "uvicorn>=0.32.0"
+      - "pydantic>=2.0.0"
+      - "httpx>=0.27.0"
+      - "anthropic>=0.40.0"
+      - "playwright>=1.48.0"
+      - "python-dotenv>=1.0.0"
+      - "websockets>=13.0"
+      - "google-genai>=1.0.0"
+      - "python-multipart>=0.0.22"
+    dev:
+      - "httpx>=0.28.1"
+      - "pytest>=9.0.2"
+      - "pytest-asyncio>=0.26"
+    build_system: hatchling
+    python: ">=3.11 (developed on 3.13)"
+  frontend:
+    runtime: "Vue 3, TypeScript, Pinia, Tailwind CSS, Vite"
+    e2e: "Playwright"
+    unit: "vitest"
+
+# ============================================================================
+# Key Decisions
+# ============================================================================
+decisions:
+  - decision: "In-memory job storage instead of database"
+    rationale: "Sites are ephemeral (deployed and done). TTL cleanup handles memory. No persistence needed across restarts."
+
+  - decision: "Cloudflare Pages as primary deploy, Vercel as fallback"
+    rationale: "Cloudflare includes free CDN + DDoS protection + edge caching. Vercel as fallback for reliability."
+
+  - decision: "Auto-delete oldest Cloudflare project when limit hit"
+    rationale: "Free tier has project limits. Auto-cleanup keeps pipeline running without manual intervention."
+
+  - decision: "WebSocket for progress instead of SSE or polling"
+    rationale: "Bidirectional needed for future features. Lower overhead than polling for 7-step pipeline updates."
+
+  - decision: "React for generated sites, Vue for the builder frontend"
+    rationale: "React sites are standalone deliverables (client gets a React project). Vue is for the builder tool itself -- keeps concerns separate."
+
+  - decision: "data.json as the only per-generation variable"
+    rationale: "Template components read from data.json. Makes editing trivial -- change JSON, rebuild. No template modification needed."
+
+  - decision: "Claude Code OAuth fallback for API auth"
+    rationale: "Developer convenience -- if running inside Claude Code, no need to set ANTHROPIC_API_KEY separately."
+
+  - decision: "Multiple template support via TEMPLATE_REGISTRY"
+    rationale: "Each template is a full React project directory (react/, react-bold/, react-elegant/). Keeps templates independent and swappable."
+
+  - decision: "Turnstile bot verification on generation endpoint"
+    rationale: "Public-facing tool -- rate limiter + Turnstile prevents abuse of expensive API calls (Claude + Gemini)."
+
+  - decision: "JSONL for error and deploy logs"
+    rationale: "Append-only, no schema migrations, easy to query line-by-line, survives crashes mid-write."
+
+# ============================================================================
+# API Gotchas (real, from the code)
+# ============================================================================
+api_gotchas:
+  - gotcha: "Google Maps selectors change frequently"
+    detail: "maps_scraper.py is 1141 lines of CSS selectors ported from production scrapers. When Google changes their markup, scraping breaks silently (returns empty fields, not errors)."
+    mitigation: "Check scrape results for empty name/address before proceeding to generation."
+
+  - gotcha: "Playwright browser must be installed separately"
+    detail: "pip install playwright does NOT install browser binaries. Must run 'playwright install chromium' before first use."
+    mitigation: "Dockerfile includes the install step. Devs need to run it manually after pip install."
+
+  - gotcha: "npm must be available for react_builder"
+    detail: "react_builder.py shells out to 'npm install && npm run build'. If node/npm not in PATH, build step fails."
+    mitigation: "Check node availability at startup or fail fast with clear error."
+
+  - gotcha: "Cloudflare project name sanitization"
+    detail: "Cloudflare Pages project names must be lowercase alphanumeric with hyphens only. Business names with special characters get sanitized, which can cause collisions."
+    mitigation: "The deployer handles sanitization but watch for duplicate project names."
+
+  - gotcha: "CORS is wide open in development"
+    detail: "allow_origins includes '*' for dev convenience. Production should restrict to actual frontend domain."
+    mitigation: "Set explicit origins for production deployment."
+
+  - gotcha: "Job storage is in-memory only"
+    detail: "All jobs lost on server restart. Deploy log persists (JSONL), but active job state does not."
+    mitigation: "By design -- sites are deployed and done. Only matters if restart happens mid-generation."
+
+  - gotcha: "Website scraping is optional but silent"
+    detail: "If business website scrape fails or returns empty, pipeline continues without that data. Generated content may be thinner."
+    mitigation: "Check the generated content quality. website_scraper failure is logged but not surfaced to user."
+
+  - gotcha: "Gemini image generation is optional"
+    detail: "If GEMINI_API_KEY not set, image generation step is silently skipped. Sites use placeholder images."
+    mitigation: "Check /health endpoint -- it reports which providers are configured."
+
+  - gotcha: "generate-section expects specific section_type values"
+    detail: "Only these are valid: services, faq_items, testimonials, why_choose_us, process_steps. Other values return generic content."
+    mitigation: "Frontend enforces valid types via GenerateModal component."
+
+# ============================================================================
+# Documentation
+# ============================================================================
+docs:
+  location: docs/
+  files:
+    - architecture.md   # Full system architecture, module breakdown, data flow
+    - api.md            # All REST endpoints with request/response examples
+    - editor.md         # Editor sections, themes, AI generation, rebuild flow
+    - testing.md        # pytest, vitest, Playwright E2E, ACT-LEARN-REUSE pattern
+    - deployment.md     # Cloudflare, Vercel, Railway, CI/CD, standalone sync
+
+# ============================================================================
+# Unvalidated Observations
+# ============================================================================
+# Populated by /se:* commands. Run /se:self-improve to validate and promote.
 unvalidated_observations: []
