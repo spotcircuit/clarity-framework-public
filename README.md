@@ -1,26 +1,58 @@
 # Clarity Framework
 
-Structured knowledge management for engineering teams using Claude Code.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Commands](https://img.shields.io/badge/commands-19-green.svg)](.claude/commands/)
+[![Wiki](https://img.shields.io/badge/wiki-16%20pages-orange.svg)](wiki/)
+
+**I kept onboarding onto client engagements blind. Every project started from zero. This fixes that.**
+
+Clarity is a set of 19 slash commands for Claude Code that build and maintain a living knowledge base for any project. Your AI gets full project context on day one and gets smarter every session.
+
+<!-- TODO: Add terminal GIF here showing /discover and /improve in action -->
+
+## Quick Start
+
+```bash
+git clone https://github.com/spotcircuit/clarity-framework-public.git
+cd clarity-framework-public
+# Start using commands immediately in Claude Code:
+/create my-first-project
+```
+
+That's it. No install, no dependencies for the core framework. Claude Code reads the commands from `.claude/commands/`.
+
+[Full getting started guide →](wiki/getting-started.md)
 
 ## What This Is (and Isn't)
 
-This is a set of structured prompts and conventions for Claude Code. It is not a CLI tool, SDK, or plugin. The slash commands are markdown files that Claude Code reads and executes as instructions.
+This is a set of structured prompts and conventions for Claude Code. Not a CLI tool, SDK, or plugin. The slash commands are markdown files that Claude Code reads and executes.
 
 What you get:
-- **19 slash commands** that build and maintain a knowledge base for any project
-- **Three knowledge systems** (structured YAML, behavioral memory, Obsidian wiki) that serve different purposes and stay in sync
-- **A self-learn loop** where commands append findings as YAML entries, and a validation command checks each against the current codebase and either promotes or discards them
-- **Agent orchestration** via Paperclip with 6 pre-configured agents (optional)
+- **19 slash commands** — knowledge management + full dev workflow
+- **Three knowledge systems** — structured YAML, behavioral memory, Obsidian wiki (never merged, each serves a different purpose)
+- **A self-learn loop** — commands append findings, `/improve` validates against live state, confirmed facts get promoted
+- **Agent orchestration** — 7 Paperclip agents (optional)
 
-Inspired by Andrej Karpathy's LLM Wiki pattern, extended with structured operational data and behavioral memory.
+## How Is This Different?
+
+| | Clarity | Obsidian alone | Confluence | Just a README |
+|---|---|---|---|---|
+| AI-native | Commands work inside Claude Code | Manual notes | Manual pages | Static file |
+| Self-improving | `/improve` validates and promotes | You curate manually | You curate manually | Rots instantly |
+| Structured + wiki | YAML for data, markdown for knowledge | Wiki only | Wiki only | Unstructured |
+| Dev workflow | `/plan`, `/build`, `/test`, `/review` | None | None | None |
+| Agent orchestration | 7 autonomous agents | None | None | None |
+| Setup time | 2 minutes | Hours of config | Days of setup | 5 minutes (then dies) |
+
+Inspired by Andrej Karpathy's LLM Wiki pattern, extended with structured operational data, behavioral memory, and a full SDLC command suite.
 
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/code) CLI installed and authenticated
-- Python 3.10+ (for YAML validation and config parsing)
-- Node.js 18+ (only needed for Paperclip agent orchestration)
+- Python 3.10+ (for YAML validation)
+- Node.js 18+ (only for Paperclip agents, optional)
 
-## Quick Start
+## Commands
 
 ### For clients (external engagements)
 
