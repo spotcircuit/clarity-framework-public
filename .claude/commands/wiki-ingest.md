@@ -25,14 +25,7 @@ PROCESSED_DIR: raw/processed
 - One concept per wiki page — split multi-concept documents into multiple pages
 - Check if a page already exists before creating — update instead of duplicate
 - Cross-reference expertise.yaml when CLIENT is set
-- SECRETS FILTER: Before writing any wiki page, scan the extracted content for secrets. This is mandatory, not optional.
-  1. Check for JWT tokens: any string starting with `eyJ` (base64-encoded JSON header)
-  2. Check for Bearer tokens: lines matching `Bearer [A-Za-z0-9_-]+`
-  3. Check for API keys/secrets: lines containing `client_secret`, `api_key`, `apikey`, `API_KEY`, `_TOKEN=`, `_SECRET=`, `password=`, `passwd=`
-  4. Check for Authorization headers: lines matching `Authorization:` followed by a token value
-  5. If a match is found, replace the secret value (not the key name) with `[REDACTED]`. Example: `api_key=sk-abc123` becomes `api_key=[REDACTED]`
-  6. If a raw file is primarily secrets (e.g., `.env`, credentials file, token dump), skip the file entirely -- log it as SKIPPED with reason "secrets file" and move it to processed/
-  7. Run this check on the final wiki page content before writing, not just on the raw source
+- SECRETS FILTER: NEVER include secrets in wiki pages. Scan every raw file for: eyJ (JWT), Bearer, client_secret, password=, api_key, _TOKEN=, _SECRET=, Authorization:. Redact matches with [REDACTED]. If a raw file is primarily secrets (like a .env), skip it entirely.
 
 ---
 
@@ -171,7 +164,7 @@ Source: raw/source-filename.ext | Ingested: YYYY-MM-DD
 
 **Cross-reference expertise.yaml (when CLIENT is set):**
 - Read `clients/CLIENT/expertise.yaml` to check: does this knowledge already exist there?
-- If the wiki page contains something missing from expertise.yaml's `implementation_patterns:` or `known_issues:`, note it (do not auto-edit expertise.yaml — that is `/se:self-improve`'s job)
+- If the wiki page contains something missing from expertise.yaml's `implementation_patterns:` or `known_issues:`, note it (do not auto-edit expertise.yaml — that is `/improve`'s job)
 
 ---
 
@@ -232,11 +225,11 @@ Pages created:
 Pages updated:
   - wiki/decisions/page-name.md
 
-expertise.yaml gaps noted (run /se:self-improve to integrate):
+expertise.yaml gaps noted (run /improve to integrate):
   - {observation if any}
 
 Files moved to raw/processed/:
   - filename.ext
 ```
 
-If CLIENT was set and expertise.yaml gaps were found, suggest running `/se:self-improve CLIENT`.
+If CLIENT was set and expertise.yaml gaps were found, suggest running `/improve CLIENT`.

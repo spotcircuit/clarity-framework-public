@@ -44,7 +44,7 @@ Output the following summary to the terminal:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CLARITY BRIEF: {display_name} ({client})
-Generated: {today} | Project Phase: {phase}/9 | Project Lead: {project_lead}
+Generated: {today} | SE Phase: {phase}/9 | SE Lead: {se_lead}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 WHAT THIS SOLUTION DOES
@@ -90,9 +90,9 @@ SCOPE BOUNDARIES
   {for each in solution.out_of_scope:} - {item}
 
 PENDING OBSERVATIONS
-{count of unvalidated_observations} observations queued for /se:self-improve
+{count of unvalidated_observations} observations queued for /improve
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Next: /se:check CLIENT | /se:self-improve CLIENT | /se:update CLIENT
+Next: /check CLIENT | /improve CLIENT | /improve CLIENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```

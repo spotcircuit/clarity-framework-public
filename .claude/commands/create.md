@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Write, Edit, Bash
-description: Create a new client — prompts progressively for what the SE knows, creates config files, then hands off to /se:discover
+description: Create a new client — prompts progressively for what the SE knows, creates config files, then hands off to /discover
 argument-hint: <client-name>
 ---
 
@@ -8,7 +8,7 @@ argument-hint: <client-name>
 
 Sets up a brand new client directory. Only the client name is required to start —
 everything else is prompted progressively and anything unknown is marked TODO.
-Creates `client.yaml` and `.env`, then hands off to `/se:discover`.
+Creates `client.yaml` and `.env`, then hands off to `/discover`.
 
 ## Variables
 
@@ -24,7 +24,7 @@ ls clients/CLIENT/ 2>/dev/null && echo "EXISTS" || echo "NEW"
 ```
 
 If EXISTS: stop and tell the user:
-> `clients/CLIENT/` already exists. Use `/se:discover CLIENT` to refresh it, or `/se:brief CLIENT` to get a summary.
+> `clients/CLIENT/` already exists. Use `/discover CLIENT` to refresh it, or `/brief CLIENT` to get a summary.
 
 If CLIENT is empty: ask for the client name and stop.
 
@@ -111,7 +111,7 @@ Where ENVPREFIX = CLIENT uppercased with underscores (e.g. `bp-hokies` → `BP_H
 ```bash
 # clients/CLIENT/.env
 # ⚠️  GITIGNORED — never commit this file.
-# Source before running /se: commands: source clients/CLIENT/.env
+# Source before running commands: source clients/CLIENT/.env
 
 ENVPREFIX_CLIENT_ID={answer 7 or blank}
 ENVPREFIX_CLIENT_SECRET={answer 8 or blank}
@@ -154,14 +154,14 @@ If credentials or tenant ID are missing, tell the SE what they'll need to do whe
 ```
 When you have credentials:
   1. Add to clients/CLIENT/.env: ENVPREFIX_CLIENT_ID and ENVPREFIX_CLIENT_SECRET
-  2. Run /se:create CLIENT again — it will generate the bearer token and run discovery
+  2. Run /create CLIENT again — it will generate the bearer token and run discovery
 ```
 
 ---
 
 ### Step 6 — Run discovery if tenant + credentials are ready
 
-If tenant ID and bearer token are set, run `/se:discover CLIENT` automatically.
+If tenant ID and bearer token are set, run `/discover CLIENT` automatically.
 
 If not: stop and report what's missing so the SE knows what to come back with.
 
@@ -182,7 +182,7 @@ Status:
   Jira:        {BH / TODO — not created yet}
   Slack:       {#channel / TODO — not created yet}
 
-{If ready:}   Running /se:discover CLIENT now...
-{If not:}     Come back with the missing pieces and re-run /se:create CLIENT.
+{If ready:}   Running /discover CLIENT now...
+{If not:}     Come back with the missing pieces and re-run /create CLIENT.
               It will pick up where you left off.
 ```

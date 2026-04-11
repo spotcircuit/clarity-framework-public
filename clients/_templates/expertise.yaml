@@ -26,4 +26,4 @@ known_issues:
   # Known bugs, gotchas, workarounds
 
 unvalidated_observations:
-  # Raw observations from sessions -- validated by /se:self-improve
+  # Raw observations from sessions -- validated by /improve

@@ -17,7 +17,7 @@ agents:
     name: Clarity Steward
     description: >
       Maintains expertise.yaml health across all clients and apps.
-      Runs /se:self-improve periodically, compresses bloated files,
+      Runs /improve periodically, compresses bloated files,
       validates YAML syntax, and promotes confirmed observations.
     role: devops
     definition_file: agents/clarity-steward.yaml
@@ -88,13 +88,13 @@ default_project:
 hooks:
   raw_file_added:
     title_template: "Ingest: {filename}"
-    description_template: "New file in raw/: {filepath}. Run /se:wiki-ingest."
+    description_template: "New file in raw/: {filepath}. Run /wiki-ingest."
     assignee: wiki-curator
     priority: medium
 
   self_improve_due:
     title_template: "Self-improve: {target}"
-    description_template: "Run /se:self-improve {target}. Last run: {last_run}."
+    description_template: "Run /improve {target}. Last run: {last_run}."
     assignee: clarity-steward
     priority: low
 

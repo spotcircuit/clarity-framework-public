@@ -10,9 +10,9 @@ heartbeat_routine: |
   1. Check raw/ for unprocessed files (anything not in raw/processed/)
   2. If files found:
      a. Create a Paperclip issue: "Ingest: {count} new files"
-     b. Run /se:wiki-ingest to process them
+     b. Run /wiki-ingest to process them
      c. Update the issue with results (pages created/updated)
-  3. If no files, run /se:wiki-lint with quick mode
+  3. If no files, run /wiki-lint with quick mode
      a. Report any broken links or orphaned pages
      b. If issues found and fewer than 5, auto-fix them
   4. Verify wiki/index.md is current

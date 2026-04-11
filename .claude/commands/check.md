@@ -1,19 +1,19 @@
 ---
 allowed-tools: Read, Edit, Bash
-description: Project readiness check against Phase 0 discovery document
+description: SE Design & Build Guidelines compliance check against a client's Phase 0 document
 argument-hint: <client-name>
 ---
 
-# Check: Project Readiness
+# SE: Check
 
-Validates a client's `phase-0-discovery.md` against project readiness requirements.
-Reports what's compliant, what's incomplete, and what's missing entirely.
+Validates a client's `phase-0-discovery.md` against the SE Design & Build Guidelines Phase 0
+requirements. Reports what's compliant, what's incomplete, and what's missing entirely.
 Updates `compliance:` section in expertise.yaml with results.
 
 ## Variables
 
 CLIENT: $ARGUMENTS
-GUIDELINES: system/guidelines/project-readiness.md
+GUIDELINES: se-guidelines/design-and-build.md
 
 ## Resolution
 
@@ -27,7 +27,7 @@ EXPERTISE: BASE_DIR/expertise.yaml
 
 ## Instructions
 
-- Read `BASE_DIR/phase-0-discovery.md` — stop if it doesn't exist (run `/se:discover` first)
+- Read `BASE_DIR/phase-0-discovery.md` — stop if it doesn't exist (run `/discover` first)
 - Count `<!-- TODO` markers as incomplete fields
 - Be specific about WHAT is missing, not just THAT it's missing
 - This command writes a sign-off block to the bottom of `phase-0-discovery.md` after every run (pass or fail), replacing any previous sign-off block
@@ -37,7 +37,7 @@ EXPERTISE: BASE_DIR/expertise.yaml
 ## Step 1: Read Documents
 
 Read `BASE_DIR/phase-0-discovery.md` in full.
-Read `system/guidelines/project-readiness.md` sections §0.1, §0.2, §0.3.
+Read `se-guidelines/design-and-build.md` sections §0.1, §0.2, §0.3.
 
 ---
 
@@ -85,7 +85,7 @@ Evaluate each requirement. Score: ✅ Complete | ⚠️ Incomplete | ❌ Missing
 ## Step 3: Count TODO Markers
 
 ```bash
-grep -c "<!-- TODO" BASE_DIR/phase-0-discovery.md 2>/dev/null || echo "0"
+grep -c "TODO" BASE_DIR/phase-0-discovery.md 2>/dev/null || echo "0"
 ```
 
 Each TODO = a field the SE still needs to fill in with the client.
@@ -124,9 +124,9 @@ then append the following (replacing `{...}` with actual values):
 
 ## Phase 0 Sign-off
 
-✅ Passed `/se:check` on {today} — {N}/{total} checks passing, 0 TODO markers remaining.
+✅ Passed `/check` on {today} — {N}/{total} checks passing, 0 TODO markers remaining.
 
-**Signed off by:** {project_lead from expertise.yaml}
+**Signed off by:** {se_lead from expertise.yaml}
 **Ready for:** Phase 1 — Data Model & Schema Design
 ```
 
@@ -144,7 +144,7 @@ then append the following (replacing `{...}` with actual values):
 - {gap 1}
 - {gap 2}
 
-**Signed off by:** {project_lead from expertise.yaml}
+**Signed off by:** {se_lead from expertise.yaml}
 ```
 
 This block is always replaced on re-run — it reflects the most recent check result.
@@ -188,5 +188,5 @@ Summary: {N}/{total} checks passing | {N} TODO markers remaining
 
 {if all pass}
 ✅  Phase 0 complete. Ready for Phase 1 — Data Model & Schema Design.
-   Run /se:brief CLIENT to generate a handoff summary.
+   Run /brief CLIENT to generate a handoff summary.
 ```

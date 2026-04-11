@@ -15,7 +15,7 @@ heartbeat_routine: |
      c. Update issue status as work progresses
      d. Record results in apps/site-builder/expertise.yaml
   4. If no pending builds:
-     a. Run /se:brief site-builder to check health
+     a. Run /brief site-builder to check health
      b. Report any anomalies
 
 # Skills

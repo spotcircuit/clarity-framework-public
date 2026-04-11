@@ -40,7 +40,7 @@ Open a GitHub issue with:
 
 Slash commands run inside Claude Code. To test a change:
 1. Open Claude Code in a repo that has Clarity set up
-2. Run the command (e.g., `/se:brief my-client`)
+2. Run the command (e.g., `/brief my-client`)
 3. Verify the output and any file changes are correct
 
 There is no automated test suite for prompt-based commands. Review changes carefully and test manually.

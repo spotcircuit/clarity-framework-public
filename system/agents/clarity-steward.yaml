@@ -13,7 +13,7 @@ heartbeat_routine: |
      a. YAML validity: python3 -c "import yaml; yaml.safe_load(open(path))"
      b. Line count -- flag if over 900 lines (cap is 1000)
      c. Unvalidated observations count -- flag if over 20 pending
-  3. Run /se:self-improve on any target with >10 unvalidated observations
+  3. Run /improve on any target with >10 unvalidated observations
   4. Report results back via issue comment
 
 # Skills this agent needs injected by Paperclip

@@ -26,15 +26,15 @@ Inspired by Andrej Karpathy's LLM Wiki pattern, extended with structured operati
 
 ```bash
 # 1. Create a new client
-/se:create my-client
+/create my-client
 
 # 2. Generate Phase 0 discovery doc + seed expertise
-/se:discover my-client
+/discover my-client
 
 # 3. Use throughout the engagement
-/se:brief my-client        # standup summary
-/se:self-improve my-client  # validate and promote observations
-/se:check my-client         # design guidelines compliance
+/brief my-client        # standup summary
+/improve my-client  # validate and promote observations
+/check my-client         # design guidelines compliance
 ```
 
 ### For apps (internal tools)
@@ -44,36 +44,36 @@ Inspired by Andrej Karpathy's LLM Wiki pattern, extended with structured operati
 cp apps/_templates/app.yaml apps/my-app/app.yaml
 
 # 2. Same commands work
-/se:discover my-app
-/se:brief my-app
+/discover my-app
+/brief my-app
 ```
 
 ### For knowledge
 
 ```bash
 # Drop files in raw/ and ingest
-/se:wiki-ingest
+/wiki-ingest
 
 # File insights from conversations
-/se:wiki-file "topic name"
+/wiki-file "topic name"
 
 # Health check
-/se:wiki-lint
+/wiki-lint
 ```
 
 ## Commands
 
 | Command | What It Does |
 |---|---|
-| `/se:create <name>` | Create a new client or app interactively |
-| `/se:discover <name>` | Phase 0 auto-generation. Seeds expertise.yaml. |
-| `/se:brief <name>` | Standup/handoff summary from expertise.yaml |
-| `/se:self-improve <name>` | Validate observations, integrate confirmed facts |
-| `/se:check <name>` | Design guidelines compliance check |
-| `/se:meeting <name>` | Ingest meeting notes from Gmail into expertise |
-| `/se:wiki-ingest` | Process files in `raw/` into wiki pages |
-| `/se:wiki-file <topic>` | File a conversation insight as a wiki page |
-| `/se:wiki-lint` | Health check: orphans, broken links, stale pages |
+| `/create <name>` | Create a new client or app interactively |
+| `/discover <name>` | Phase 0 auto-generation. Seeds expertise.yaml. |
+| `/brief <name>` | Standup/handoff summary from expertise.yaml |
+| `/improve <name>` | Validate observations, integrate confirmed facts |
+| `/check <name>` | Design guidelines compliance check |
+| `/meeting <name>` | Ingest meeting notes from Gmail into expertise |
+| `/wiki-ingest` | Process files in `raw/` into wiki pages |
+| `/wiki-file <topic>` | File a conversation insight as a wiki page |
+| `/wiki-lint` | Health check: orphans, broken links, stale pages |
 
 ## Directory Structure
 
@@ -103,20 +103,20 @@ Each serves a different purpose. Do not merge them.
 
 | System | Purpose | Format | Updated By |
 |---|---|---|---|
-| `expertise.yaml` | Operational data (project state, API gotchas, results) | Structured YAML | `/se:*` commands |
+| `expertise.yaml` | Operational data (project state, API gotchas, results) | Structured YAML | `slash commands` commands |
 | `.claude/memory/` | Behavioral rules (user preferences, guardrails) | Markdown + frontmatter | Claude automatically |
-| `wiki/` | Synthesized knowledge (patterns, decisions, concepts) | Obsidian markdown + `[[links]]` | `/se:wiki-*` commands |
+| `wiki/` | Synthesized knowledge (patterns, decisions, concepts) | Obsidian markdown + `[[links]]` | `/wiki-*` commands |
 
 ## The Self-Learn Loop
 
 ```
-You work --> commands append observations --> /se:self-improve validates
+You work --> commands append observations --> /improve validates
     ^                                              |
     |                                              v
     +--- confirmed facts promoted into expertise.yaml
 ```
 
-Every `/se:*` command appends raw observations to `unvalidated_observations:` in expertise.yaml. Running `/se:self-improve` validates each one against current live state and either promotes confirmed facts into the relevant expertise section or discards stale ones.
+Every `slash commands` command appends raw observations to `unvalidated_observations:` in expertise.yaml. Running `/improve` validates each one against current live state and either promotes confirmed facts into the relevant expertise section or discards stale ones.
 
 ## Comparison
 
@@ -155,7 +155,7 @@ git clone https://github.com/spotcircuit/clarity-framework.git
 cd clarity-framework
 
 # Start using slash commands immediately in Claude Code
-/se:create my-first-client
+/create my-first-client
 ```
 
 For Paperclip agent orchestration:

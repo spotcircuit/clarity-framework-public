@@ -25,7 +25,7 @@ EXPERTISE: BASE_DIR/expertise.yaml
 
 ## Instructions
 
-- Read `BASE_DIR/expertise.yaml` — stop if it doesn't exist (run `/se:discover` first)
+- Read `BASE_DIR/expertise.yaml` — stop if it doesn't exist (run `/discover` first)
 - This command ONLY modifies expertise.yaml — never touches phase-0-discovery.md
 - Be conservative: only promote an observation if it's clearly confirmed by current live data
 - When in doubt, leave it in unvalidated_observations with a note
@@ -69,7 +69,7 @@ For each observation in `unvalidated_observations:`, check against live sources:
 - Platform API behavior (query syntax, endpoint gotchas, env vars) = platform-level
 - Reusable flow patterns (error handling, idempotency, logging) = platform-level
 - Client-specific bugs, field mappings, team decisions = NOT platform-level
-These tagged observations are candidates for `/se:contribute` to the SE knowledge base repo.
+These tagged observations are candidates for `/contribute` to the SE knowledge base repo.
 
 ---
 

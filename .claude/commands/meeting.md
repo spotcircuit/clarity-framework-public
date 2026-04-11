@@ -84,7 +84,7 @@ From the meeting body, extract:
 
 **Action items** (look for: named person + "will" + action)
 - Note who the owner is for each action
-- Flag any where YOUR_NAME is the owner
+- Flag any where Brian Pyatt is the owner
 
 **New issues or bugs** (look for: "critical", "blocking", "stuck", "not working", "only applies to", error descriptions)
 
@@ -118,7 +118,7 @@ Append a new section to `BASE_DIR/notes.md`:
 
 **Action Items**
 - {name} — {action}
-- ⭐ YOUR_NAME — {action}   ← flag YOUR_NAME's items with star
+- ⭐ Brian Pyatt — {action}   ← flag Brian's items with star
 
 **Notes**
 {any other relevant context}
@@ -170,5 +170,5 @@ Updated:
   - {action 1}
   - {action 2}
 
-Run /se:self-improve CLIENT to validate and integrate observations.
+Run /improve CLIENT to validate and integrate observations.
 ```
