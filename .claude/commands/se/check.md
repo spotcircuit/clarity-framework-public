@@ -85,7 +85,7 @@ Evaluate each requirement. Score: ✅ Complete | ⚠️ Incomplete | ❌ Missing
 ## Step 3: Count TODO Markers
 
 ```bash
-grep -c "TODO" BASE_DIR/phase-0-discovery.md 2>/dev/null || echo "0"
+grep -c "<!-- TODO" BASE_DIR/phase-0-discovery.md 2>/dev/null || echo "0"
 ```
 
 Each TODO = a field the SE still needs to fill in with the client.

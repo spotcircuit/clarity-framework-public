@@ -25,7 +25,14 @@ PROCESSED_DIR: raw/processed
 - One concept per wiki page — split multi-concept documents into multiple pages
 - Check if a page already exists before creating — update instead of duplicate
 - Cross-reference expertise.yaml when CLIENT is set
-- SECRETS FILTER: NEVER include secrets in wiki pages. Scan every raw file for: eyJ (JWT), Bearer, client_secret, password=, api_key, _TOKEN=, _SECRET=, Authorization:. Redact matches with [REDACTED]. If a raw file is primarily secrets (like a .env), skip it entirely.
+- SECRETS FILTER: Before writing any wiki page, scan the extracted content for secrets. This is mandatory, not optional.
+  1. Check for JWT tokens: any string starting with `eyJ` (base64-encoded JSON header)
+  2. Check for Bearer tokens: lines matching `Bearer [A-Za-z0-9_-]+`
+  3. Check for API keys/secrets: lines containing `client_secret`, `api_key`, `apikey`, `API_KEY`, `_TOKEN=`, `_SECRET=`, `password=`, `passwd=`
+  4. Check for Authorization headers: lines matching `Authorization:` followed by a token value
+  5. If a match is found, replace the secret value (not the key name) with `[REDACTED]`. Example: `api_key=sk-abc123` becomes `api_key=[REDACTED]`
+  6. If a raw file is primarily secrets (e.g., `.env`, credentials file, token dump), skip the file entirely -- log it as SKIPPED with reason "secrets file" and move it to processed/
+  7. Run this check on the final wiki page content before writing, not just on the raw source
 
 ---
 

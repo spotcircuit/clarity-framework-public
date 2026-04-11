@@ -16,7 +16,12 @@ CLARITY_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIG="$CLARITY_ROOT/system/paperclip.yaml"
 ID_CACHE="$CLARITY_ROOT/system/.paperclip-ids.json"
 API_BASE="http://127.0.0.1:3100"
-COMPANY_ID="d7dfb458-5fbc-4afd-8b9e-f765d253726f"
+COMPANY_ID="${PAPERCLIP_COMPANY_ID:-}"
+if [ -z "$COMPANY_ID" ]; then
+  err "PAPERCLIP_COMPANY_ID environment variable is not set."
+  err "Export it before running this script: export PAPERCLIP_COMPANY_ID=your-company-id"
+  exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Helpers

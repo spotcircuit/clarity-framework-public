@@ -118,7 +118,7 @@ Append a new section to `BASE_DIR/notes.md`:
 
 **Action Items**
 - {name} — {action}
-- ⭐ YOUR_NAME — {action}   ← flag Brian's items with star
+- ⭐ YOUR_NAME — {action}   ← flag YOUR_NAME's items with star
 
 **Notes**
 {any other relevant context}

@@ -1,16 +1,24 @@
 # Clarity Framework
 
-Agentic intelligence framework for technical engagements. Gives any engineer full project context on day one and grows smarter throughout the engagement through a self-learn loop.
+Structured knowledge management for engineering teams using Claude Code.
 
-Based on Andrej Karpathy's LLM Wiki pattern, extended with structured operational data and behavioral memory.
+## What This Is (and Isn't)
 
-## What It Does
+This is a set of structured prompts and conventions for Claude Code. It is not a CLI tool, SDK, or plugin. The slash commands are markdown files that Claude Code reads and executes as instructions.
 
-- **Day-one context**: Run `/se:discover` on any codebase and get a structured knowledge base immediately
-- **Self-learn loop**: Every command appends observations. `/se:self-improve` validates them against live state and promotes confirmed facts.
-- **Three knowledge systems**: Structured YAML (operational data), markdown memory (behavioral rules), Obsidian wiki (durable knowledge)
-- **9 slash commands** for Claude Code that chain together into autonomous workflows
-- **Agent orchestration** via Paperclip with 6 pre-configured agents
+What you get:
+- **10 slash commands** that build and maintain a knowledge base for any project
+- **Three knowledge systems** (structured YAML, behavioral memory, Obsidian wiki) that serve different purposes and stay in sync
+- **A self-learn loop** where commands append findings as YAML entries, and a validation command checks each against the current codebase and either promotes or discards them
+- **Agent orchestration** via Paperclip with 6 pre-configured agents (optional)
+
+Inspired by Andrej Karpathy's LLM Wiki pattern, extended with structured operational data and behavioral memory.
+
+## Prerequisites
+
+- [Claude Code](https://claude.ai/code) CLI installed and authenticated
+- Python 3.10+ (for YAML validation and config parsing)
+- Node.js 18+ (only needed for Paperclip agent orchestration)
 
 ## Quick Start
 
@@ -62,22 +70,21 @@ cp apps/_templates/app.yaml apps/my-app/app.yaml
 | `/se:brief <name>` | Standup/handoff summary from expertise.yaml |
 | `/se:self-improve <name>` | Validate observations, integrate confirmed facts |
 | `/se:check <name>` | Design guidelines compliance check |
+| `/se:meeting <name>` | Ingest meeting notes from Gmail into expertise |
 | `/se:wiki-ingest` | Process files in `raw/` into wiki pages |
 | `/se:wiki-file <topic>` | File a conversation insight as a wiki page |
 | `/se:wiki-lint` | Health check: orphans, broken links, stale pages |
-| `/se:meeting <name>` | Ingest meeting notes into expertise |
 
 ## Directory Structure
 
 ```
 clarity-framework/
-  .claude/commands/se/    # 9 slash commands (the core product)
+  .claude/commands/se/    # 10 slash commands (the core product)
   clients/
     _templates/           # Copy these to start a new client
-    spotcircuit/          # Example client
+    spotcircuit/          # Working example
   apps/
     _templates/           # Copy these to start a new app
-    site-builder/         # Example app
   wiki/
     index.md              # LLM reads this first for navigation
   system/
@@ -109,11 +116,22 @@ You work --> commands append observations --> /se:self-improve validates
     +--- confirmed facts promoted into expertise.yaml
 ```
 
-Every `/se:*` command appends raw observations to `unvalidated_observations:` in expertise.yaml. Running `/se:self-improve` validates each one against current live state and either promotes confirmed facts or discards stale ones.
+Every `/se:*` command appends raw observations to `unvalidated_observations:` in expertise.yaml. Running `/se:self-improve` validates each one against current live state and either promotes confirmed facts into the relevant expertise section or discards stale ones.
+
+## Comparison
+
+**Why not Obsidian alone?**
+Obsidian is great for human-readable knowledge, but it does not handle structured operational data (API endpoints, record counts, deployment status). Clarity uses Obsidian-compatible wiki pages for durable knowledge and YAML for operational data that commands can parse and update programmatically.
+
+**Why not Confluence / Notion?**
+Those tools are designed for human editors. Clarity's knowledge systems are designed to be read and written by an LLM during work, not maintained separately. The wiki, YAML, and memory files live in the repo alongside the code.
+
+**Why three systems instead of one?**
+Each has a different update frequency and consumer. `expertise.yaml` changes every session (operational state). `.claude/memory/` changes when Claude learns a new behavioral preference. `wiki/` changes when durable knowledge is synthesized. Merging them would make each harder to maintain and query.
 
 ## Agent Orchestration
 
-Clarity includes 6 pre-configured Paperclip agents:
+Clarity includes 6 pre-configured Paperclip agents (optional -- the core framework works without them):
 
 | Agent | Role | Schedule |
 |---|---|---|
@@ -125,42 +143,28 @@ Clarity includes 6 pre-configured Paperclip agents:
 | Triage Agent | Routes new issues to agents | Every 5 min |
 
 ```bash
-# Start Paperclip and sync agents
+# Requires PAPERCLIP_COMPANY_ID environment variable
+export PAPERCLIP_COMPANY_ID=your-company-id
 bash scripts/paperclip-sync.sh
-
-# Check status
-bash scripts/paperclip-sync.sh status
-
-# Trigger a heartbeat
-bash scripts/paperclip-sync.sh heartbeat clarity-steward
 ```
 
-## Setup
-
-### Prerequisites
-
-- [Claude Code](https://claude.ai/code) CLI installed
-- Python 3.10+
-- Node.js 18+ (for Paperclip)
-
-### Install
+## Install
 
 ```bash
-git clone https://github.com/spotcircuit/clarity-framework-public.git
-cd clarity-framework-public
+git clone https://github.com/spotcircuit/clarity-framework.git
+cd clarity-framework
 
-# Start using slash commands immediately
+# Start using slash commands immediately in Claude Code
 /se:create my-first-client
 ```
-
-No dependencies to install for the core framework. It's just YAML, markdown, and Claude Code commands.
 
 For Paperclip agent orchestration:
 ```bash
 npm install -g paperclipai
+export PAPERCLIP_COMPANY_ID=your-company-id
 bash scripts/paperclip-sync.sh
 ```
 
 ## License
 
-MIT
+MIT -- see [LICENSE](LICENSE).

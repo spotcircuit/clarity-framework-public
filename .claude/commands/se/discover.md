@@ -112,14 +112,20 @@ import yaml, sys
 c = yaml.safe_load(open('clients/CLIENT/client.yaml'))
 print(c.get('tenant', {}).get('dev', {}).get('bearer_token', ''))
 ")
-BEARER=$(eval echo $BEARER_VAR)
+# Safe indirect expansion -- strips ${ and } then uses bash ${!name} instead of eval
+BEARER_VAR_NAME="${BEARER_VAR#\$\{}"
+BEARER_VAR_NAME="${BEARER_VAR_NAME%\}}"
+BEARER="${!BEARER_VAR_NAME:-}"
 
 MGT_VAR=$(python3 -c "
 import yaml, sys
 c = yaml.safe_load(open('clients/CLIENT/client.yaml'))
 print(c.get('tenant', {}).get('dev', {}).get('management_token', ''))
 ")
-MGT=$(eval echo $MGT_VAR)
+# Safe indirect expansion -- strips ${ and } then uses bash ${!name} instead of eval
+MGT_VAR_NAME="${MGT_VAR#\$\{}"
+MGT_VAR_NAME="${MGT_VAR_NAME%\}}"
+MGT="${!MGT_VAR_NAME:-}"
 
 NO_URL=$(python3 -c "
 import yaml, sys
@@ -176,7 +182,7 @@ From this output extract:
 #    Get records grouped by status to find stuck records and backlogs
 PLATFORM_BEARER_TOKEN=$BEARER \
   npx --yes @platform-io/cli@latest --tenant-url $NO_URL \
-  records list --type "{type-name}" --limit 100 2>/dev/null | \
+  records list --type "$TYPE_NAME" --limit 100 2>/dev/null | \  # TYPE_NAME is filled dynamically from the object types discovered in Step 4a
   python3 -c "
 import json, sys, collections
 records = json.load(sys.stdin).get('records', [])
