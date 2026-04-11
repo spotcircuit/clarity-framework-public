@@ -4,6 +4,28 @@ This wiki shows what the Clarity Framework does, how it works, and what it produ
 
 Clarity is an agentic intelligence framework for technical engagements. It gives any engineer (human or AI) full project context on day one and grows smarter throughout the engagement through a self-learn loop. Based on Andrej Karpathy's LLM Wiki pattern, extended with structured operational data and behavioral memory.
 
+## Getting Started
+
+New to Clarity? Start here.
+
+- [Getting Started](getting-started.md) -- 15-minute tutorial from clone to working framework
+
+## Tools
+
+Integrations and supporting infrastructure.
+
+- [Paperclip](tools/paperclip.md) -- Agent orchestration: 7 autonomous agents, heartbeats, issue routing
+- [Obsidian](tools/obsidian.md) -- Use the wiki as an Obsidian vault with bidirectional sync
+- [Quartz](tools/quartz.md) -- Render the wiki as a searchable website via GitHub Pages
+- [Claude Desktop](tools/claude-desktop.md) -- Access framework knowledge from Claude Desktop via MCP
+
+## Diagrams
+
+Visual architecture and workflow references.
+
+- [Architecture](diagrams/architecture.md) -- System overview, self-learn loop, three knowledge systems, agent orchestration
+- [Command Flow](diagrams/command-flow.md) -- Client onboarding, development cycle, knowledge capture workflows
+
 ## Examples
 
 Real output from real projects managed by the framework.
