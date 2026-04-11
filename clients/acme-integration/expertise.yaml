@@ -1,0 +1,161 @@
+# Acme Integration — expertise.yaml
+# Managed by /se:* commands. Do not edit unvalidated_observations manually.
+
+client: acme-integration
+display_name: Acme Logistics Integration
+last_updated: 2026-03-22
+
+architecture:
+  platform: Node-RED 3.x (self-hosted, multi-tenant)
+  runtime: Node.js 18 LTS
+  custom_nodes: 14 registered (7 trade-specific, 4 compliance, 3 utility)
+  api_layer: Node-RED Admin API (REST) for flow CRUD + deploy
+  database: PostgreSQL 15 (shipment records, compliance audit trail)
+  message_broker: MQTT (warehouse sensor events, status updates)
+  auth: OAuth2 + API keys per integration partner
+  testing: Playwright against Node-RED runtime endpoints
+
+flows:
+  receiving_intake:
+    description: "Inbound shipment intake — parses EDI 856 (advance ship notice), validates against PO, creates receiving record"
+    nodes: 23
+    trigger: MQTT message from warehouse management system
+    output: PostgreSQL record + status webhook to ERP
+    ai_generated: true
+    generation_time: "~3 minutes (vs 3+ hours manual)"
+
+  compliance_check:
+    description: "Trade compliance screening — checks denied party lists, validates HTS codes, flags restricted items"
+    nodes: 31
+    trigger: HTTP POST from receiving_intake flow (on new shipment)
+    output: compliance status (CLEARED / HOLD / REJECTED) + audit record
+    external_apis:
+      - denied_party_screening_api
+      - hts_code_lookup_service
+      - restricted_items_database
+    ai_generated: true
+    note: "AI placed the denied-party check node AFTER the HTS lookup initially — wrong order. Denied party must run first (fail-fast). Caught in Playwright test."
+
+  customs_filing:
+    description: "Automated customs entry filing — assembles required documents, calculates duties, submits to customs broker API"
+    nodes: 38
+    trigger: compliance_check output (CLEARED status only)
+    output: filing confirmation number + duty calculation
+    external_apis:
+      - customs_broker_api  # REST, submits entry data
+      - duty_calculator_api  # tariff schedule lookups
+      - document_storage_api  # S3-compatible, stores filing docs
+    note: "Most complex flow. Credential node for customs broker must be type 'oauth2' not 'basic-auth' — the broker API returns 200 OK with error body on wrong auth type instead of 401."
+
+  status_tracking:
+    description: "End-to-end shipment status — aggregates events from warehouse, compliance, customs, and delivery into unified timeline"
+    nodes: 18
+    trigger: Change events from all other flows (via MQTT)
+    output: REST API endpoint (GET /shipment/:id/timeline) + webhook push to ERP
+    note: "Uses Node-RED context store (flow-level) to maintain in-flight state. Context store resets on redeploy — must hydrate from PostgreSQL on startup."
+
+api_integrations:
+  customs_broker_api:
+    type: REST
+    auth: OAuth2 (client_credentials grant)
+    base_url_env: CUSTOMS_BROKER_API_URL
+    rate_limit: "60 req/min, 429 with Retry-After header"
+    gotcha: "Returns HTTP 200 with error in response body for auth failures. Must check response.status field, not HTTP status code."
+    gotcha_2: "Filing endpoint is async — returns a tracking ID. Poll /status/{id} every 30s. Do NOT re-submit if no immediate response."
+
+  erp_system:
+    type: REST
+    auth: API key (X-Api-Key header)
+    base_url_env: ERP_API_URL
+    gotcha: "Timestamps must be ISO 8601 with timezone. Sending without timezone offset causes silent data corruption (defaults to UTC-12)."
+
+  denied_party_screening:
+    type: REST
+    auth: API key (query param)
+    gotcha: "Name matching is fuzzy by default (80% threshold). Set exact=true for compliance — false positives are better than false negatives in denied party screening."
+
+  hts_code_lookup:
+    type: REST
+    auth: none (public API, rate-limited by IP)
+    rate_limit: "10 req/sec per IP"
+    gotcha: "HTS codes are 10-digit but the API accepts 6-digit prefix for category lookup. Always use full 10-digit for filing."
+
+nodered_admin_api:
+  description: "How we manage flows programmatically instead of through the editor UI"
+  base_path: "/flows"
+  key_endpoints:
+    get_all_flows: "GET /flows — returns entire flow configuration including all tabs"
+    get_single_flow: "GET /flow/:id — returns single flow (tab) by ID"
+    update_flow: "PUT /flow/:id — updates a single flow. MUST include complete node array, not just changed nodes."
+    create_flow: "POST /flow — creates new flow tab. Returns the new flow ID."
+    deploy: "POST /flows — deploys all flows. Body must be complete flow config. Use header 'Node-RED-Deployment-Type: flows' for full deploy or 'nodes' for modified-nodes-only."
+    get_nodes: "GET /nodes — lists all installed node types. Custom nodes appear after restart, not hot-reload."
+
+  gotchas:
+    - "PUT /flow/:id replaces the ENTIRE flow. Omitting a node deletes it. Always GET first, modify, then PUT."
+    - "Credential nodes are NOT returned by GET /flows for security. Must be created separately via POST /credentials or included in flow JSON with 'credentials' property."
+    - "Subflow instances inherit the subflow template's credentials. Changing creds on an instance does nothing — must update the template."
+    - "'Node-RED-Deployment-Type: nodes' deploy only pushes changed nodes but does NOT restart message routing. Flows that depend on deploy-time initialization (context store hydration, MQTT reconnect) need full deploy."
+    - "Flow IDs are random hex strings. The editor assigns them on creation. When creating flows via API, you can set your own IDs (useful for idempotent deploys) but they must be valid hex."
+    - "After deploying via API, the editor UI does not auto-refresh. Users looking at the editor will see stale state until they refresh the browser. This caused confusion during demos."
+    - "Node z-order in the editor is determined by array position in the flow JSON. AI-generated flows sometimes have nodes in wrong visual order (overlapping) while being functionally correct. This is the 'rendering glitch' that gets called out in reviews."
+
+  push_agent:
+    description: "Automated deployment pipeline — AI generates flow JSON, validates structure, deploys via admin API"
+    steps:
+      - "1. Generate flow JSON from specification (Claude, ~3 min)"
+      - "2. Validate: all node types exist (GET /nodes), all wires reference valid node IDs, credential nodes present"
+      - "3. Dry-run: deploy to staging tenant with 'Node-RED-Deployment-Type: flows'"
+      - "4. Test: Playwright hits the flow's HTTP trigger endpoint, asserts expected output"
+      - "5. Promote: deploy same JSON to production tenant"
+    validation_checks:
+      - "Every node.type must exist in GET /nodes response"
+      - "Every wire must reference a valid node ID within the same flow"
+      - "Credential nodes must be present for any node that requires them"
+      - "No duplicate node IDs (AI sometimes reuses IDs across copy-paste)"
+      - "Inject nodes must have correct payload type (not 'str' when 'json' expected)"
+
+testing:
+  framework: Playwright
+  approach: "Test against Node-RED runtime, not the editor UI"
+  suites:
+    flow_execution: "HTTP trigger → assert response body/status for each flow"
+    compliance_logic: "Feed known-bad entities through compliance_check, assert HOLD/REJECTED"
+    filing_integration: "Mock customs broker API, verify filing payload structure"
+    status_aggregation: "Fire events from multiple flows, verify unified timeline"
+  key_finding: "Playwright tests caught that AI-generated compliance_check flow had denied-party screening AFTER HTS lookup. Visually correct in editor (nodes left-to-right) but wire order was wrong. Execution order follows wires, not visual position."
+  runtime: "~4 min for full suite against staging tenant"
+
+deployment:
+  strategy: "Push agent deploys flow JSON via Node-RED Admin API"
+  environments:
+    staging:
+      tenant_id_env: STAGING_TENANT_ID
+      auto_deploy: true (on push to staging branch)
+    production:
+      tenant_id_env: PROD_TENANT_ID
+      auto_deploy: false (manual promotion after Playwright passes on staging)
+  rollback: "GET /flows on production before each deploy, store as rollback snapshot. On failure, PUT the snapshot back."
+
+key_decisions:
+  why_nodered:
+    decision: "Use Node-RED as the flow execution engine"
+    rationale: "Client's existing infrastructure. 200+ flows already in production. Migration off Node-RED not in scope."
+    tradeoff: "Node-RED admin API is powerful but has sharp edges (see gotchas). Editor-first design means programmatic management is possible but not first-class."
+
+  why_programmatic_flows:
+    decision: "Generate and deploy flows via API instead of manual editor work"
+    rationale: "3+ hours per flow manually. Engineers spending more time in the editor than writing business logic. AI generates equivalent flow JSON in ~3 minutes."
+    tradeoff: "AI-generated flows have visual layout issues in editor (overlapping nodes, non-standard arrangement). Functionally correct but look different from hand-built flows."
+
+  why_playwright_not_unit:
+    decision: "Integration tests via Playwright against running Node-RED instance, not unit tests on flow JSON"
+    rationale: "Flow JSON structure validation catches syntax errors but misses execution-order bugs. The compliance flow bug (wrong node execution order despite correct visual layout) would not have been caught by JSON validation."
+    tradeoff: "Tests are slower (~4 min vs seconds) and require a running Node-RED instance. Worth it for correctness."
+
+unvalidated_observations:
+  - "MQTT broker reconnection after Node-RED restart takes 15-30 seconds. Status tracking flow misses events during this window. May need a replay mechanism."
+  - "Customs broker API changed their sandbox URL without notice on March 18. Staging tests started failing silently (200 OK with 'environment deprecated' in body). Need a health check endpoint monitor."
+  - "AI-generated flows default to 'once' message rate for inject nodes. Production flows need 'repeat' with interval. Should add to generation prompt template."
+  - "Node-RED memory usage grows over 72 hours without restart. Suspect context store leak in status_tracking flow. Need to add memory monitoring."
+  - "The push agent currently deploys to one tenant at a time. Client has 6 tenants. Should batch-deploy with rollback-on-first-failure."
