@@ -16,7 +16,7 @@ site_structure:
   core_pages:
     - /           # Homepage - agentic AI hero + 6 service cards
     - /services   # 6 revenue streams with feature lists
-    - /clarity    # Framework showcase (3 knowledge systems, 9 commands, self-learn loop)
+    - /clarity    # Framework showcase (3 knowledge systems, 23 commands, self-learn loop)
     - /about      # Brian's story, beliefs, connect links
     - /blog       # Ghost CMS integration
     - /contact    # Contact form + Google Calendar booking

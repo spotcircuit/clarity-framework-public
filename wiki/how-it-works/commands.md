@@ -1,6 +1,6 @@
 # Commands
 
-Clarity has 19 slash commands organized into four groups: client/app management, development workflow, wiki management, and utilities.
+Clarity has 23 slash commands organized into four groups: client/app management, development workflow, wiki management, and utilities.
 
 All commands auto-resolve names from both `clients/` and `apps/` directories.
 
@@ -110,6 +110,20 @@ Ingest meeting notes from Gmail (Gemini auto-notes) into notes.md and expertise.
 
 ### `/meta-prompt <request>`
 Create a new slash command prompt based on a description.
+
+## Advanced Workflow
+
+### `/plan-build-improve <app> <request>`
+One-command full SDLC cycle. Chains `/plan` → `/build` → `/improve` sequentially. Loads expertise first so the plan is context-aware, builds from the plan, then validates the expertise against what changed.
+
+### `/test-learn <app> [focus_area]`
+Run tests → analyze results → update expertise. Different from `/test` (which just runs) and `/improve` (which validates observations). This uses test results as a source of truth to discover undocumented system behavior and update expertise.yaml.
+
+### `/plan-scout <prompt>`
+Enhanced planning with parallel context gathering. Deploys 8 scout agents (3 deep + 5 fast) to explore the codebase before creating the plan. Produces better plans for complex features.
+
+### `/build-parallel <plan-file>`
+Parallel implementation. Reads a plan file and delegates file creation to parallel build agents, each handling one file with detailed specs. Faster than sequential `/build` for multi-file features.
 
 ## Related
 

@@ -29,7 +29,7 @@ Open a GitHub issue with:
 
 | Directory | What It Contains |
 |---|---|
-| `.claude/commands/` | 19 slash command prompts (knowledge + dev workflow) |
+| `.claude/commands/` | 23 slash command prompts (knowledge + dev workflow) |
 | `clients/_templates/` | Templates for new client engagements |
 | `apps/_templates/` | Templates for internal tools/apps |
 | `wiki/` | Knowledge wiki (rendered via [Quartz](https://spotcircuit.github.io/clarity-wiki/)) |

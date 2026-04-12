@@ -39,7 +39,7 @@ The mechanics behind the framework.
 
 - [The Self-Learn Loop](how-it-works/self-learn-loop.md) -- How observations get validated, promoted, or discarded. The core feedback mechanism.
 - [Three Knowledge Systems](how-it-works/three-systems.md) -- Why the framework uses YAML + memory + wiki instead of one system. What each stores and why they stay separate.
-- [Commands](how-it-works/commands.md) -- All 19 slash commands with descriptions and example output.
+- [Commands](how-it-works/commands.md) -- All 23 slash commands with descriptions and example output.
 
 ## Patterns
 

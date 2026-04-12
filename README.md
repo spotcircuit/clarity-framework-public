@@ -7,7 +7,7 @@
 
 **I kept onboarding onto client engagements blind. Every project started from zero. This fixes that.**
 
-Clarity is a set of 19 slash commands for Claude Code that build and maintain a living knowledge base for any project. Your AI gets full project context on day one and gets smarter every session.
+Clarity is a set of 23 slash commands for Claude Code that build and maintain a living knowledge base for any project. Your AI gets full project context on day one and gets smarter every session.
 
 **[Browse the Wiki](https://spotcircuit.github.io/clarity-wiki/)** | [Getting Started](wiki/getting-started.md) | [Commands](wiki/how-it-works/commands.md) | [Examples](wiki/examples/)
 
@@ -31,7 +31,7 @@ That's it. No install, no dependencies for the core framework. Claude Code reads
 This is a set of structured prompts and conventions for Claude Code. Not a CLI tool, SDK, or plugin. The slash commands are markdown files that Claude Code reads and executes.
 
 What you get:
-- **19 slash commands** — knowledge management + full dev workflow
+- **23 slash commands** — knowledge management + full dev workflow
 - **Three knowledge systems** — structured YAML, behavioral memory, Obsidian wiki (never merged, each serves a different purpose)
 - **A self-learn loop** — commands append findings, `/improve` validates against live state, confirmed facts get promoted
 - **Agent orchestration** — 7 Paperclip agents (optional)
@@ -129,7 +129,7 @@ cp apps/_templates/app.yaml apps/my-app/app.yaml
 
 ```
 clarity-framework/
-  .claude/commands/     # 19 slash commands (the core product)
+  .claude/commands/     # 23 slash commands (the core product)
   clients/
     _templates/           # Copy these to start a new client
     spotcircuit/          # Working example
