@@ -158,6 +158,10 @@ clarity-framework/
   scripts/              # Wiki sync, Obsidian sync, Paperclip sync
 ```
 
+## Inspiration
+
+The wiki pattern is based on [Andrej Karpathy's LLM Wiki](https://karpathy.ai/) concept — using structured markdown as a knowledge layer that LLMs read natively. Clarity extends it with structured YAML for operational data, a validation loop, and a full development command suite.
+
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/code) CLI
