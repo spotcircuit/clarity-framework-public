@@ -2,7 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Commands](https://img.shields.io/badge/commands-19-green.svg)](.claude/commands/)
-[![Wiki](https://img.shields.io/badge/wiki-16%20pages-orange.svg)](wiki/)
+[![Wiki](https://img.shields.io/badge/wiki-20%20pages-orange.svg)](https://spotcircuit.github.io/clarity-wiki/)
+[![Docs](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://spotcircuit.github.io/clarity-wiki/)
 
 **I kept onboarding onto client engagements blind. Every project started from zero. This fixes that.**
 
