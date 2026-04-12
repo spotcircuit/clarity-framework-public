@@ -19,22 +19,33 @@ Open a GitHub issue with:
 ## Code Style
 
 - **YAML files** must pass `yaml.safe_load()` without errors
-- **Wiki pages** follow the format in CLAUDE.md: title, tags on line 2, content, Related section, source attribution
-- **Slash commands** are markdown files in `.claude/commands/se/` -- they are Claude Code prompts, not traditional code. They use a frontmatter block for tool permissions and a structured markdown body that Claude interprets as instructions. Edit them like you would edit a detailed prompt, not a script.
+- **Wiki pages** follow the format: title, brief description, content, Related section with links
+- **Slash commands** are markdown files in `.claude/commands/` — they are Claude Code prompts, not traditional code. They use a frontmatter block for tool permissions and a structured markdown body that Claude interprets as instructions. Edit them like you would edit a detailed prompt, not a script.
 - Keep expertise.yaml under 1000 lines
 - One concept per wiki page
-- Use `[[wiki links]]` for cross-references in wiki pages
+- Use relative markdown links for cross-references in wiki pages
 
 ## What Lives Where
 
 | Directory | What It Contains |
 |---|---|
-| `.claude/commands/se/` | Slash command prompts (the core product) |
+| `.claude/commands/` | 19 slash command prompts (knowledge + dev workflow) |
 | `clients/_templates/` | Templates for new client engagements |
 | `apps/_templates/` | Templates for internal tools/apps |
-| `wiki/` | Obsidian-compatible knowledge wiki |
-| `scripts/` | Shell scripts for Paperclip agent sync |
-| `system/` | Agent definitions and guidelines |
+| `wiki/` | Knowledge wiki (rendered via [Quartz](https://spotcircuit.github.io/clarity-wiki/)) |
+| `scripts/` | Shell scripts for Paperclip sync, Obsidian sync, wiki sync |
+| `system/agents/` | 7 Paperclip agent definitions |
+| `system/paperclip.yaml` | Agent orchestration config |
+| `raw/` | Intake folder for files to be ingested by `/wiki-ingest` |
+
+## Key Technologies
+
+| Tool | Purpose |
+|---|---|
+| [Claude Code](https://claude.ai/code) | AI-powered development environment that runs the slash commands |
+| [Paperclip](https://github.com/paperclipai/paperclip) | Agent orchestration. Manages 7 autonomous agents with heartbeats and issue routing |
+| [Quartz](https://quartz.jzhao.xyz/) | Renders the wiki/ folder as a searchable website |
+| [Obsidian](https://obsidian.md/) | Optional. The wiki/ folder works as an Obsidian vault with cross-links |
 
 ## Testing Slash Commands
 
@@ -44,3 +55,13 @@ Slash commands run inside Claude Code. To test a change:
 3. Verify the output and any file changes are correct
 
 There is no automated test suite for prompt-based commands. Review changes carefully and test manually.
+
+## Command Categories
+
+**Knowledge management:** `/create`, `/discover`, `/brief`, `/check`, `/improve`, `/meeting`
+
+**Wiki:** `/wiki-ingest`, `/wiki-file`, `/wiki-lint`
+
+**Development workflow:** `/new`, `/feature`, `/bug`, `/takeover`, `/plan`, `/build`, `/test`, `/review`
+
+**Utilities:** `/scout`, `/meta-prompt`
