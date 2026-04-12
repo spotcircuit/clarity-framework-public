@@ -9,6 +9,8 @@
 
 Clarity is a set of 19 slash commands for Claude Code that build and maintain a living knowledge base for any project. Your AI gets full project context on day one and gets smarter every session.
 
+**[Browse the Wiki](https://spotcircuit.github.io/clarity-wiki/)** | [Getting Started](wiki/getting-started.md) | [Commands](wiki/how-it-works/commands.md) | [Examples](wiki/examples/)
+
 <!-- TODO: Add terminal GIF here showing /discover and /improve in action -->
 
 ## Quick Start
