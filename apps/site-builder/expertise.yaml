@@ -2,7 +2,7 @@
 # Site Builder -- Clarity Expertise File
 # ============================================================================
 # Accumulated operational knowledge for the site-builder app.
-# Maintained by /se:self-improve and /se:discover commands.
+# Maintained by /improve and /discover commands.
 # Source of truth for architecture, gotchas, and decisions.
 # ============================================================================
 
@@ -481,5 +481,5 @@ docs:
 # ============================================================================
 # Unvalidated Observations
 # ============================================================================
-# Populated by /se:* commands. Run /se:self-improve to validate and promote.
+# Populated by slash commands commands. Run /improve to validate and promote.
 unvalidated_observations: []

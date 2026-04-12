@@ -21,7 +21,7 @@
 
 [00:01:28] Sarah Chen: That should probably be a pattern across all our services not just the auth middleware.
 
-[00:01:33] Brian: Agreed. I'd recommend we file that as a wiki page — it's a reusable pattern. I can run `/se:wiki-file redis-circuit-breaker` after this meeting to capture it.
+[00:01:33] Brian: Agreed. I'd recommend we file that as a wiki page — it's a reusable pattern. I can run `/wiki-file redis-circuit-breaker` after this meeting to capture it.
 
 [00:01:42] Sarah Chen: Do that.
 
@@ -51,15 +51,15 @@
 
 [00:04:03] Marcus Rivera: I was going to ask Brian actually. The runbook should cover how to add a new service to the pipeline. Right now only Priya and I know how to do it and we're the bottleneck.
 
-[00:04:15] Brian: I'll write it. I'll use the session notes from our integration work. Actually, I should run `/se:brief demo-corp` and use that as the starting point — it'll have the current state of everything.
+[00:04:15] Brian: I'll write it. I'll use the session notes from our integration work. Actually, I should run `/brief demo-corp` and use that as the starting point — it'll have the current state of everything.
 
 [00:04:28] Sarah Chen: Speaking of which, that expertise file thing you set up — it caught the Redis issue before I even heard about it. Priya logged it as an observation and it showed up in the next self-improve run.
 
-[00:04:42] Brian: That's the self-learn loop working. `/se:self-improve demo-corp` validates observations against the current state. The Redis circuit breaker observation will get promoted to the architecture section once we verify the fix is deployed.
+[00:04:42] Brian: That's the self-learn loop working. `/improve demo-corp` validates observations against the current state. The Redis circuit breaker observation will get promoted to the architecture section once we verify the fix is deployed.
 
 [00:04:58] Priya Patel: Quick question — DEMO-482 is the Teams transcript ingestion. We found out transcripts 404 after 30 days. Our sprint retros are biweekly so we should be fine but the quarterly planning meetings might get missed. Should I set up a more aggressive polling interval for those?
 
-[00:05:16] Brian: Set the poll to every 15 minutes for all meetings. The 30-day clock is the hard constraint — as long as we ingest within that window, we're fine. For quarterly planning specifically, maybe trigger a manual ingest right after the meeting via `/se:wiki-ingest`.
+[00:05:16] Brian: Set the poll to every 15 minutes for all meetings. The 30-day clock is the hard constraint — as long as we ingest within that window, we're fine. For quarterly planning specifically, maybe trigger a manual ingest right after the meeting via `/wiki-ingest`.
 
 [00:05:32] Marcus Rivera: OK that's DEMO-482. Last big one — DEMO-485 is the Slack approval workflow improvements. Right now the :rocket: reaction works but there's no confirmation that the approval went through. You react and then... hope?
 
@@ -75,7 +75,7 @@
 
 [00:06:32] Sarah Chen: Good. Let's ship it. Brian — that wiki-file thing, can you also capture the DORA metrics definitions? I want everyone aligned on how we calculate lead time and failure rate.
 
-[00:06:44] Brian: Will do. `/se:wiki-file dora-metrics-definitions` after the meeting.
+[00:06:44] Brian: Will do. `/wiki-file dora-metrics-definitions` after the meeting.
 
 [00:06:50] Sarah Chen: Perfect. Let's go.
 
@@ -84,10 +84,10 @@
 ---
 
 ## Action items (extracted from transcript):
-- [ ] Brian: `/se:wiki-file redis-circuit-breaker` — capture Redis failover pattern
-- [ ] Brian: `/se:wiki-file dora-metrics-definitions` — capture DORA metric calculations
+- [ ] Brian: `/wiki-file redis-circuit-breaker` — capture Redis failover pattern
+- [ ] Brian: `/wiki-file dora-metrics-definitions` — capture DORA metric calculations
 - [ ] Brian: Write runbook for adding new service to pipeline (DEMO-461)
-- [ ] Brian: Run `/se:brief demo-corp` for runbook starting point
+- [ ] Brian: Run `/brief demo-corp` for runbook starting point
 - [ ] James: DEMO-470 Block Kit pagination — timebox unfurl issue to half day
 - [ ] Priya: DEMO-478 DORA metrics aggregation — denormalize ticket number at write time
 - [ ] Priya: Flag by Wednesday if DEMO-478 needs pairing help

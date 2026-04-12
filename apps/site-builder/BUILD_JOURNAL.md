@@ -10,7 +10,7 @@ This is raw. Some things broke. The framework caught those breakages and turned 
 
 ### Bootstrapping
 
-Started with `/se:create site-builder`. Clarity prompted for the basics:
+Started with `/create site-builder`. Clarity prompted for the basics:
 
 ```
 > App name: site-builder
@@ -22,7 +22,7 @@ Started with `/se:create site-builder`. Clarity prompted for the basics:
 
 Created `apps/site-builder/app.yaml`. Mostly empty at this point — just the scaffold.
 
-Ran `/se:discover site-builder`. Phase 0 came back with a reasonable decomposition:
+Ran `/discover site-builder`. Phase 0 came back with a reasonable decomposition:
 
 ```
 Phase 0 identified:
@@ -74,10 +74,10 @@ unvalidated_observations:
   - "No image generation yet — hero section looks empty without a banner"
 ```
 
-Ran `/se:improve`:
+Ran `/improve`:
 
 ```
-/se:improve site-builder
+/improve site-builder
 
 Reviewing 5 unvalidated observations...
 
@@ -109,10 +109,10 @@ Reviewing 5 unvalidated observations...
 
 ### The scraper fight
 
-Opened the session. Ran `/se:brief site-builder`:
+Opened the session. Ran `/brief site-builder`:
 
 ```
-/se:brief site-builder
+/brief site-builder
 
 Site Builder — Briefing
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -207,10 +207,10 @@ unvalidated_observations:
   - "Need to handle Maps listings with no website URL gracefully (skip website scraper, don't error)"
 ```
 
-Ran `/se:improve`:
+Ran `/improve`:
 
 ```
-/se:improve site-builder
+/improve site-builder
 
 Reviewing 4 unvalidated observations...
 
@@ -236,7 +236,7 @@ Reviewing 4 unvalidated observations...
 3 promoted, 1 discarded, 0 deferred.
 ```
 
-The discarded observation is a good example. I added WebSocket progress later in the session but had written the observation earlier. `/se:improve` caught that it was already done.
+The discarded observation is a good example. I added WebSocket progress later in the session but had written the observation earlier. `/improve` caught that it was already done.
 
 ---
 
@@ -342,10 +342,10 @@ unvalidated_observations:
   - "Theme preset switch sometimes leaves stale CSS variables — need to clear before applying new theme"
 ```
 
-Ran `/se:improve`:
+Ran `/improve`:
 
 ```
-/se:improve site-builder
+/improve site-builder
 
 Reviewing 4 unvalidated observations...
 
@@ -419,7 +419,7 @@ Hit one issue: Cloudflare Pages has a project limit (varies by plan). Added auto
 ### Final /brief
 
 ```
-/se:brief site-builder
+/brief site-builder
 
 Site Builder — Briefing
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -491,7 +491,7 @@ unvalidated_observations: []
 
 ### Wiki capture
 
-Ran `/se:wiki-file deployment-pattern-monorepo-to-standalone` to capture the GitHub Action sync pattern as a wiki page. This is a reusable pattern — any monorepo app could use the same approach:
+Ran `/wiki-file deployment-pattern-monorepo-to-standalone` to capture the GitHub Action sync pattern as a wiki page. This is a reusable pattern — any monorepo app could use the same approach:
 
 ```
 wiki/patterns/monorepo-standalone-sync.md created
@@ -506,9 +506,9 @@ wiki/patterns/monorepo-standalone-sync.md created
 
 Across four sessions, Clarity:
 
-1. **Kept context alive between sessions.** Each `/se:brief` at session start gave a clean summary of where things stood, what was unvalidated, and what to focus on next. No re-reading code to remember what happened yesterday.
+1. **Kept context alive between sessions.** Each `/brief` at session start gave a clean summary of where things stood, what was unvalidated, and what to focus on next. No re-reading code to remember what happened yesterday.
 
-2. **Caught stale observations.** Two observations were discarded because they described problems that got fixed later in the same session. Without `/se:improve`, those would have lingered as "known issues" that weren't issues anymore.
+2. **Caught stale observations.** Two observations were discarded because they described problems that got fixed later in the same session. Without `/improve`, those would have lingered as "known issues" that weren't issues anymore.
 
 3. **Forced specificity.** The observation format pushes you toward concrete statements ("Gemini timeouts on complex prompts, need 30s timeout + retry") instead of vague notes ("image gen is slow sometimes"). The promotion step verifies these against actual code.
 

@@ -6,7 +6,7 @@
 
 ### What happened
 
-Ran `/se:create acme-integration` and `/se:discover acme-integration`. Phase 0 generated cleanly.
+Ran `/create acme-integration` and `/discover acme-integration`. Phase 0 generated cleanly.
 
 Spent most of the session mapping existing manual flows. The client has 200+ flows in production but the four core ones handle 80% of shipment volume:
 

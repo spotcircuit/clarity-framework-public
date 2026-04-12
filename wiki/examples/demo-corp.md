@@ -5,7 +5,7 @@
 Synthesized knowledge from sprint planning, Slack discussions, and Jira tickets for the Demo Corp deployment automation engagement. This page captures patterns and decisions that emerged across multiple sources.
 
 Source: raw/demo-meeting-transcript.md, raw/demo-slack-export.md, raw/demo-jira-notes.md
-Ingested: 2026-04-08 via `/se:wiki-ingest`
+Ingested: 2026-04-08 via `/wiki-ingest`
 
 ---
 

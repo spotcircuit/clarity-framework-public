@@ -8,7 +8,7 @@ How the Clarity Framework was used across four sessions to build an AI-assisted 
 
 ### Bootstrapping
 
-Started with `/se:create acme-integration`. Clarity prompted for the basics:
+Started with `/create acme-integration`. Clarity prompted for the basics:
 
 ```
 > Client name: acme-integration
@@ -17,7 +17,7 @@ Started with `/se:create acme-integration`. Clarity prompted for the basics:
 > Goal: AI-assisted flow generation and deployment for Node-RED platform
 ```
 
-Created `clients/acme-integration/client.yaml`. Ran `/se:discover acme-integration`.
+Created `clients/acme-integration/client.yaml`. Ran `/discover acme-integration`.
 
 Phase 0 came back with a solid decomposition. It identified the four core flows, the Node-RED Admin API as the programmatic interface, and flagged credential management as a risk area. Good output for a discovery prompt.
 
@@ -74,10 +74,10 @@ unvalidated_observations:
   - "Four core flows handle 80% of volume — start with these"
 ```
 
-Ran `/se:improve`:
+Ran `/improve`:
 
 ```
-/se:improve acme-integration
+/improve acme-integration
 
 Reviewing 4 unvalidated observations...
 
@@ -108,7 +108,7 @@ Reviewing 4 unvalidated observations...
 ### The brief
 
 ```
-/se:brief acme-integration
+/brief acme-integration
 
 Acme Integration — Briefing
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -188,10 +188,10 @@ unvalidated_observations:
   - "Node-RED grid is 20px — positions should snap to multiples of 20"
 ```
 
-Ran `/se:improve`:
+Ran `/improve`:
 
 ```
-/se:improve acme-integration
+/improve acme-integration
 
 Reviewing 3 unvalidated observations...
 
@@ -218,7 +218,7 @@ Reviewing 3 unvalidated observations...
 ### The brief
 
 ```
-/se:brief acme-integration
+/brief acme-integration
 
 Acme Integration — Briefing
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -287,10 +287,10 @@ unvalidated_observations:
   - "Test runtime ~4 min. Acceptable for deploy pipeline."
 ```
 
-Ran `/se:improve`:
+Ran `/improve`:
 
 ```
-/se:improve acme-integration
+/improve acme-integration
 
 Reviewing 3 unvalidated observations...
 
@@ -317,7 +317,7 @@ Reviewing 3 unvalidated observations...
 ### The brief
 
 ```
-/se:brief acme-integration
+/brief acme-integration
 
 Acme Integration — Briefing
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -378,7 +378,7 @@ Seven minutes from specification to production. Manual process for the same chan
 ### Final /brief
 
 ```
-/se:brief acme-integration
+/brief acme-integration
 
 Acme Integration — Briefing
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -394,7 +394,7 @@ Unvalidated: 5 observations pending next /improve cycle.
 
 ### expertise.yaml — final state
 
-The expertise.yaml checked into this repo is the final version after Session 4. It grew from 15 lines after Session 1 to the full operational reference. Nobody sat down and wrote it as documentation — it accumulated through the `/se:improve` cycle.
+The expertise.yaml checked into this repo is the final version after Session 4. It grew from 15 lines after Session 1 to the full operational reference. Nobody sat down and wrote it as documentation — it accumulated through the `/improve` cycle.
 
 The unvalidated observations at the bottom are real pending items from the last session. They represent the next session's starting point.
 
@@ -406,7 +406,7 @@ Acme Integration is a different kind of project from site-builder. It is enterpr
 
 ### 1. Context survived between sessions
 
-Each session started with `/se:brief`. On Day 5, the brief told me exactly where things stood: one flow generated, no testing yet, no deploy pipeline. I did not need to re-read code or check what state the staging instance was in. The brief had it.
+Each session started with `/brief`. On Day 5, the brief told me exactly where things stood: one flow generated, no testing yet, no deploy pipeline. I did not need to re-read code or check what state the staging instance was in. The brief had it.
 
 ### 2. Gotchas accumulated in one place
 
@@ -414,7 +414,7 @@ The Node-RED Admin API gotchas section in expertise.yaml is worth its weight. Th
 
 ### 3. /improve caught the real bugs
 
-The compliance flow execution-order bug was found by Playwright, but it was `/se:improve` that promoted "AI wire order doesn't always match visual layout" from an observation to a documented gotcha. That gotcha now prevents the same class of bug on every future flow generation.
+The compliance flow execution-order bug was found by Playwright, but it was `/improve` that promoted "AI wire order doesn't always match visual layout" from an observation to a documented gotcha. That gotcha now prevents the same class of bug on every future flow generation.
 
 ### 4. The 3-minute story holds up
 
@@ -422,4 +422,4 @@ AI-generated flow in ~3 minutes vs 3+ hours manual. The push agent adds ~4 minut
 
 ### 5. Visual acceptance matters as much as functional correctness
 
-The rendering incident (Session 2) was the most important lesson. Functionally correct output that looks wrong in the editor will be rejected. The layout normalization post-processor was not in the original plan. It was born from an observation, promoted by `/se:improve`, and became a core part of the pipeline. This is the self-learn loop working as intended.
+The rendering incident (Session 2) was the most important lesson. Functionally correct output that looks wrong in the editor will be rejected. The layout normalization post-processor was not in the original plan. It was born from an observation, promoted by `/improve`, and became a core part of the pipeline. This is the self-learn loop working as intended.

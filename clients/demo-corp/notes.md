@@ -6,7 +6,7 @@
 
 ### What happened
 
-Ran `/se:create demo-corp` and `/se:discover demo-corp`. Phase 0 generated. Then dove into the Jira integration.
+Ran `/create demo-corp` and `/discover demo-corp`. Phase 0 generated. Then dove into the Jira integration.
 
 Set up a Jira OAuth 2.0 (3LO) app in Atlassian Developer Console. The 3LO flow is more complex than expected — requires an initial user authorization redirect even for server-to-server use. Ended up using a long-lived refresh token stored in Secrets Manager.
 
@@ -124,7 +124,7 @@ A transcript ingestion job that:
 2. Downloads VTT content
 3. Extracts Jira ticket mentions (DEMO-\d+ pattern)
 4. Maps speaker names to team members
-5. Drops the processed transcript into `raw/` for `/se:wiki-ingest`
+5. Drops the processed transcript into `raw/` for `/wiki-ingest`
 
 ### Observations logged
 

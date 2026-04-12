@@ -72,7 +72,7 @@ Drop processed transcripts into `raw/` for wiki-ingest.
 - Ingestion runs within 30-day transcript retention window
 
 **Blockers:** Teams Premium license only on 20 seats — only management/lead meetings are transcribed
-**Notes:** Quarterly planning meetings need manual `/se:wiki-ingest` trigger since they happen infrequently.
+**Notes:** Quarterly planning meetings need manual `/wiki-ingest` trigger since they happen infrequently.
 
 ---
 

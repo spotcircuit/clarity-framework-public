@@ -45,7 +45,7 @@ on it
 @brian FYI this is a good one for the expertise file. Redis health check + ECS startup timing is going to bite us on every service.
 
 **Brian** — Apr 3, 2026, 2:33 PM
-noted. I'll run `/se:self-improve demo-corp` after the fix lands — this should get captured as an architecture gotcha.
+noted. I'll run `/improve demo-corp` after the fix lands — this should get captured as an architecture gotcha.
 
 **Priya Patel** — Apr 3, 2026, 2:47 PM
 PR up: #251 "Make Redis health check non-fatal during startup grace period"

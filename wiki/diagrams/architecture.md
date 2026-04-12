@@ -104,7 +104,7 @@ graph TB
 ```
 
 Each system serves a different purpose. They stay separate by design:
-- **expertise.yaml** -- operational data that changes frequently (updated by `/se:*` commands)
+- **expertise.yaml** -- operational data that changes frequently (updated by `slash commands` commands)
 - **.claude/memory/** -- behavioral rules and preferences (updated by Claude automatically)
 - **wiki/** -- synthesized knowledge that compounds over time (updated by `/wiki-*` commands)
 

@@ -18,7 +18,7 @@ heartbeat_routine: |
      c. Set priority based on keywords (error/urgent=high, else medium)
      d. Update the issue with assignment and priority
 
-# Skills -- triage is lightweight, no /se: skills needed
+# Skills -- triage is lightweight, no slash command skills needed
 skills: []
 
 # Files this agent reads (for context only)
