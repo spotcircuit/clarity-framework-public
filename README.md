@@ -1,7 +1,7 @@
 # Clarity Framework
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Commands](https://img.shields.io/badge/commands-19-green.svg)](.claude/commands/)
+[![Commands](https://img.shields.io/badge/commands-23-green.svg)](.claude/commands/)
 [![Wiki](https://img.shields.io/badge/wiki-20%20pages-orange.svg)](https://spotcircuit.github.io/clarity-wiki/)
 [![Docs](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://spotcircuit.github.io/clarity-wiki/)
 
