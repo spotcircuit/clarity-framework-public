@@ -2,219 +2,168 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Commands](https://img.shields.io/badge/commands-23-green.svg)](.claude/commands/)
-[![Wiki](https://img.shields.io/badge/wiki-20%20pages-orange.svg)](https://spotcircuit.github.io/clarity-wiki/)
-[![Docs](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://spotcircuit.github.io/clarity-wiki/)
+[![Wiki](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://spotcircuit.github.io/clarity-wiki/)
 
-**I kept onboarding onto client engagements blind. Every project started from zero. This fixes that.**
+**Claude Code forgets everything between sessions. Clarity fixes that.**
 
-Clarity is a set of 23 slash commands for Claude Code that build and maintain a living knowledge base for any project. Your AI gets full project context on day one and gets smarter every session.
+23 slash commands that capture what your AI learns and make it persistent. You explain your project once. Every session after that starts with full context.
 
-**[Browse the Wiki](https://spotcircuit.github.io/clarity-wiki/)** | [Getting Started](wiki/getting-started.md) | [Commands](wiki/how-it-works/commands.md) | [Examples](wiki/examples/)
+**[Browse the Docs](https://spotcircuit.github.io/clarity-wiki/)** | [Getting Started](wiki/getting-started.md) | [All Commands](wiki/how-it-works/commands.md) | [Examples](wiki/examples/)
 
-<!-- TODO: Add terminal GIF here showing /discover and /improve in action -->
+## The Problem
 
-## Quick Start
+```
+Session 1: "Here's our architecture, we use FastAPI, the deploy goes to..."
+Session 2: "Remember yesterday? We use FastAPI, the deploy goes to..."
+Session 3: "So like I was saying, FastAPI, and the deploy..."
+```
+
+Every Claude Code session starts from zero. Project context lives in your head. Tribal knowledge stays tribal.
+
+## How Clarity Fixes It
 
 ```bash
 git clone https://github.com/spotcircuit/clarity-framework-public.git
 cd clarity-framework-public
-# Start using commands immediately in Claude Code:
-/create my-first-project
+
+# In Claude Code:
+/create my-project        # Set up the project
+/discover my-project      # Auto-generate expertise.yaml from your codebase
 ```
 
-That's it. No install, no dependencies for the core framework. Claude Code reads the commands from `.claude/commands/`.
+That's it. Now every session starts by reading `expertise.yaml` — your project's structured memory.
+
+As you work, commands capture what you learn:
+```
+/improve my-project       # Validate observations against live code
+                          # Promotes confirmed facts, discards stale ones
+                          # Your context compounds over time
+```
 
 [Full getting started guide →](wiki/getting-started.md)
 
-## What This Is (and Isn't)
+## What You Get
 
-This is a set of structured prompts and conventions for Claude Code. Not a CLI tool, SDK, or plugin. The slash commands are markdown files that Claude Code reads and executes.
+**Not a CLI tool, SDK, or plugin.** These are markdown files in `.claude/commands/` that Claude Code reads as instructions. Clone the repo and the commands just work.
 
-What you get:
-- **23 slash commands** — knowledge management + full dev workflow
-- **Three knowledge systems** — structured YAML, behavioral memory, Obsidian wiki (never merged, each serves a different purpose)
-- **A self-learn loop** — commands append findings, `/improve` validates against live state, confirmed facts get promoted
-- **Agent orchestration** — 7 Paperclip agents (optional)
+### Context that persists
 
-## How Is This Different?
+| What happens | Without Clarity | With Clarity |
+|---|---|---|
+| Session 1 | Explain everything | `/discover` captures it |
+| Session 2 | Explain it again | Claude reads expertise.yaml |
+| Session 3 | Explain it again | Claude already knows |
+| After a bug fix | You remember, AI doesn't | `/improve` captures the gotcha |
+| New team member | 2 weeks onboarding | `/brief` gives full context |
 
-| | Clarity | Obsidian alone | Confluence | Just a README |
-|---|---|---|---|---|
-| AI-native | Commands work inside Claude Code | Manual notes | Manual pages | Static file |
-| Self-improving | `/improve` validates and promotes | You curate manually | You curate manually | Rots instantly |
-| Structured + wiki | YAML for data, markdown for knowledge | Wiki only | Wiki only | Unstructured |
-| Dev workflow | `/plan`, `/build`, `/test`, `/review` | None | None | None |
-| Agent orchestration | 7 autonomous agents | None | None | None |
-| Setup time | 2 minutes | Hours of config | Days of setup | 5 minutes (then dies) |
+### 23 commands across four categories
 
-Inspired by Andrej Karpathy's LLM Wiki pattern, extended with structured operational data, behavioral memory, and a full SDLC command suite.
+**Project context** — `/create`, `/discover`, `/brief`, `/check`, `/improve`, `/meeting`
 
-## Prerequisites
+**Development** — `/new`, `/feature`, `/bug`, `/takeover`, `/plan`, `/build`, `/test`, `/review`
 
-- [Claude Code](https://claude.ai/code) CLI installed and authenticated
-- Python 3.10+ (for YAML validation)
-- Node.js 18+ (only for Paperclip agents, optional)
+**Knowledge** — `/wiki-ingest`, `/wiki-file`, `/wiki-lint`
 
-## Commands
+**Advanced** — `/plan-build-improve`, `/test-learn`, `/plan-scout`, `/build-parallel`, `/scout`, `/meta-prompt`
 
-### For clients (external engagements)
+[See all commands with examples →](wiki/how-it-works/commands.md)
 
-```bash
-# 1. Create a new client
-/create my-client
+### Three places knowledge lives
 
-# 2. Generate Phase 0 discovery doc + seed expertise
-/discover my-client
+| File | What it holds | How it updates |
+|---|---|---|
+| `expertise.yaml` | Project state, API gotchas, architecture decisions | Commands append, `/improve` validates |
+| `.claude/memory/` | Your preferences, guardrails, behavioral rules | Claude updates automatically |
+| `wiki/` | Patterns, decisions, synthesized knowledge | `/wiki-ingest`, `/wiki-file` |
 
-# 3. Use throughout the engagement
-/brief my-client        # standup summary
-/improve my-client  # validate and promote observations
-/check my-client         # design guidelines compliance
+They're separate because they change at different speeds. `expertise.yaml` updates every session. Memory updates when Claude notices a preference. Wiki updates when durable knowledge emerges.
+
+## Real Examples
+
+### What expertise.yaml looks like after 4 sessions
+
+```yaml
+# apps/site-builder/expertise.yaml (real, not generated for this README)
+architecture:
+  backend: FastAPI + Python 3.13 + asyncio
+  frontend: Vue 3 + TypeScript + Pinia
+  ai_content: Claude Sonnet
+  deploy_primary: Cloudflare Pages
+
+api_gotchas:
+  - "Google Maps blocks headless Chrome without stealth plugin"
+  - "Claude sometimes returns markdown in HTML fields — sanitize"
+  - "Cloudflare Pages has a 100-project limit — auto-delete oldest"
+
+key_decisions:
+  - "Vue for dashboard, React for generated sites — different concerns"
+  - "WebSocket for progress — real-time feedback matters for 60s generation"
+
+unvalidated_observations: []  # Clean — all validated by /improve
 ```
 
-### For apps (internal tools)
+[See the full expertise.yaml →](apps/site-builder/expertise.yaml)
+[See the build journal showing how it grew →](apps/site-builder/BUILD_JOURNAL.md)
 
-```bash
-# 1. Copy template
-cp apps/_templates/app.yaml apps/my-app/app.yaml
+### What raw file ingestion looks like
 
-# 2. Same commands work
-/discover my-app
-/brief my-app
+Drop a messy meeting transcript in `raw/`:
+```
+raw/demo-meeting-transcript.md  ← messy Teams transcript
+raw/demo-slack-export.md        ← #incidents channel dump
+raw/demo-jira-notes.md          ← sprint tickets
 ```
 
-### For knowledge
+Run `/wiki-ingest`. Get structured wiki pages with cross-references.
 
-```bash
-# Drop files in raw/ and ingest
-/wiki-ingest
+[See the raw files →](raw/) | [See what came out →](wiki/examples/demo-corp.md)
 
-# File insights from conversations
-/wiki-file "topic name"
+## How is this different from X?
 
-# Health check
-/wiki-lint
-```
+**"Just use a good README"** — READMEs are static. Clarity's expertise.yaml updates as you work. `/improve` validates observations against actual code so the context stays accurate.
 
-## Commands
+**"Just use Obsidian"** — Obsidian is manual curation. Clarity captures knowledge during development and validates it programmatically. The wiki/ folder IS an Obsidian vault if you want it.
 
-| Command | What It Does |
+**"Confluence / Notion"** — Those are for humans to maintain. Clarity's files are designed to be read and written by an LLM during work. They live in your repo, not a separate tool.
+
+**"I'll just use CLAUDE.md"** — CLAUDE.md is one file. Clarity adds structured per-project expertise, a validation loop, 23 commands, and a wiki. CLAUDE.md is part of the system, not the whole system.
+
+## Optional: Agent Orchestration
+
+7 Paperclip agents that run on a schedule (not required for the core framework):
+
+| Agent | What it does |
 |---|---|
-| `/create <name>` | Create a new client or app interactively |
-| `/discover <name>` | Phase 0 auto-generation. Seeds expertise.yaml. |
-| `/brief <name>` | Standup/handoff summary from expertise.yaml |
-| `/improve <name>` | Validate observations, integrate confirmed facts |
-| `/check <name>` | Design guidelines compliance check |
-| `/meeting <name>` | Ingest meeting notes from Gmail into expertise |
-| `/wiki-ingest` | Process files in `raw/` into wiki pages |
-| `/wiki-file <topic>` | File a conversation insight as a wiki page |
-| `/wiki-lint` | Health check: orphans, broken links, stale pages |
+| Clarity Steward | Validates expertise.yaml health every 4 hours |
+| Wiki Curator | Processes raw/ intake every 30 minutes |
+| GTM Agent | Tracks engagement and adjusts content strategy |
+| Triage Agent | Routes issues to the right agent |
 
-### Development Workflow (ported from Forge)
-
-| Command | What It Does |
-|---|---|
-| `/new <name> <desc>` | Scaffold a new app with stack selection |
-| `/feature <app> <request>` | Full SDLC cycle: plan, build, test, self-learn |
-| `/bug <app> <symptom>` | Investigation-first minimal fix |
-| `/takeover <app>` | Onboard an existing codebase, build expertise |
-| `/plan <prompt>` | Create implementation spec in specs/ |
-| `/build <plan-file>` | Implement a plan top-to-bottom |
-| `/test <app>` | Run tests, parse results, optionally auto-fix |
-| `/review <app>` | Structured code review: correctness, security, patterns |
-| `/scout <app> <question>` | Read-only codebase investigation with structured report |
-| `/meta-prompt <desc>` | Generate a new slash command from a description |
+```bash
+npm install -g paperclipai
+export PAPERCLIP_COMPANY_ID=your-id
+bash scripts/paperclip-sync.sh
+```
 
 ## Directory Structure
 
 ```
 clarity-framework/
-  .claude/commands/     # 23 slash commands (the core product)
-  clients/
-    _templates/           # Copy these to start a new client
-    spotcircuit/          # Working example
-  apps/
-    _templates/           # Copy these to start a new app
-  wiki/
-    index.md              # LLM reads this first for navigation
-  system/
-    agents/               # Paperclip agent definitions
-    paperclip.yaml        # Agent orchestration config
-    drafts/               # Working drafts
-  scripts/
-    paperclip-sync.sh     # Sync agents to Paperclip
-    wiki-sync.sh          # Sync wiki to external tools
-    sync-obsidian.sh      # Obsidian vault sync
+  .claude/commands/     # 23 slash commands
+  apps/                 # Your apps (site-builder, demo-api examples included)
+  clients/              # Your clients (demo-corp, acme-integration examples)
+  wiki/                 # Knowledge wiki (Obsidian-compatible, Quartz-rendered)
+  raw/                  # Drop zone for files to ingest
+  system/               # Agent configs, Paperclip orchestration
+  scripts/              # Wiki sync, Obsidian sync, Paperclip sync
 ```
 
-## Three Knowledge Systems
+## Prerequisites
 
-Each serves a different purpose. Do not merge them.
-
-| System | Purpose | Format | Updated By |
-|---|---|---|---|
-| `expertise.yaml` | Operational data (project state, API gotchas, results) | Structured YAML | `slash commands` commands |
-| `.claude/memory/` | Behavioral rules (user preferences, guardrails) | Markdown + frontmatter | Claude automatically |
-| `wiki/` | Synthesized knowledge (patterns, decisions, concepts) | Obsidian markdown + `[[links]]` | `/wiki-*` commands |
-
-## The Self-Learn Loop
-
-```
-You work --> commands append observations --> /improve validates
-    ^                                              |
-    |                                              v
-    +--- confirmed facts promoted into expertise.yaml
-```
-
-Every `slash commands` command appends raw observations to `unvalidated_observations:` in expertise.yaml. Running `/improve` validates each one against current live state and either promotes confirmed facts into the relevant expertise section or discards stale ones.
-
-## Comparison
-
-**Why not Obsidian alone?**
-Obsidian is great for human-readable knowledge, but it does not handle structured operational data (API endpoints, record counts, deployment status). Clarity uses Obsidian-compatible wiki pages for durable knowledge and YAML for operational data that commands can parse and update programmatically.
-
-**Why not Confluence / Notion?**
-Those tools are designed for human editors. Clarity's knowledge systems are designed to be read and written by an LLM during work, not maintained separately. The wiki, YAML, and memory files live in the repo alongside the code.
-
-**Why three systems instead of one?**
-Each has a different update frequency and consumer. `expertise.yaml` changes every session (operational state). `.claude/memory/` changes when Claude learns a new behavioral preference. `wiki/` changes when durable knowledge is synthesized. Merging them would make each harder to maintain and query.
-
-## Agent Orchestration
-
-Clarity includes 6 pre-configured Paperclip agents (optional -- the core framework works without them):
-
-| Agent | Role | Schedule |
-|---|---|---|
-| Clarity Steward | Maintains expertise.yaml health | Every 4 hours |
-| Wiki Curator | Processes raw/ intake, fixes links | Every 30 min |
-| Site Builder Agent | Manages app lifecycle | Every 6 hours |
-| Social Media Agent | Daily posting pipeline | Weekdays 9am |
-| Outreach Agent | Monitors and responds to comments | Every 30 min |
-| Triage Agent | Routes new issues to agents | Every 5 min |
-
-```bash
-# Requires PAPERCLIP_COMPANY_ID environment variable
-export PAPERCLIP_COMPANY_ID=your-company-id
-bash scripts/paperclip-sync.sh
-```
-
-## Install
-
-```bash
-git clone https://github.com/spotcircuit/clarity-framework.git
-cd clarity-framework
-
-# Start using slash commands immediately in Claude Code
-/create my-first-client
-```
-
-For Paperclip agent orchestration:
-```bash
-npm install -g paperclipai
-export PAPERCLIP_COMPANY_ID=your-company-id
-bash scripts/paperclip-sync.sh
-```
+- [Claude Code](https://claude.ai/code) CLI
+- Python 3.10+ (for YAML validation)
+- Node.js 18+ (only for Paperclip agents, optional)
 
 ## License
 
-MIT -- see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
